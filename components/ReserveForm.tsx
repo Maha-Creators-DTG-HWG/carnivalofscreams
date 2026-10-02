@@ -1,9 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 
-import "@/types/doku-checkout";
+import "@/types/midtrans-snap";
 import { createReservation } from "@/app/actions/reserve";
 import { getSeat, seatsForPackage } from "@/lib/seats";
 import {
@@ -26,7 +27,8 @@ export type ReservePreview = {
 
 type Props = {
   enabled: boolean;
-  checkoutJsUrl: string;
+  snapJsUrl: string;
+  clientKey: string;
   takenSeatIds: string[];
   /** Seat selection is lifted so the floor plan can drive it too. */
   seatId: string | null;
@@ -37,13 +39,13 @@ type Props = {
 const STEPS: ReserveStep[] = ["night", "area", "table", "details", "pay"];
 const STEP_LABELS = ["Day", "Area", "Table", "Details", "Pay"] as const;
 
-function waitForJokulCheckout() {
-  return new Promise<NonNullable<Window["loadJokulCheckout"]>>(
+function waitForSnap() {
+  return new Promise<NonNullable<Window["snap"]>>(
     (resolve, reject) => {
       const started = Date.now();
       const tick = () => {
-        if (typeof window.loadJokulCheckout === "function") {
-          resolve(window.loadJokulCheckout);
+        if (typeof window.snap?.pay === "function") {
+          resolve(window.snap);
           return;
         }
         if (Date.now() - started > 8000) {
@@ -63,12 +65,14 @@ const PHONE_RE = /^\+?[0-9]{9,16}$/;
 
 export default function ReserveForm({
   enabled,
-  checkoutJsUrl,
+  snapJsUrl,
+  clientKey,
   takenSeatIds,
   seatId,
   onSeatChange,
   onPreviewChange,
 }: Props) {
+  const router = useRouter();
   const [step, setStep] = useState<ReserveStep>("night");
   const [pending, startTransition] = useTransition();
   const [name, setName] = useState("");
@@ -96,8 +100,8 @@ export default function ReserveForm({
     onPreviewChange?.({ step, packageId, nightId, seatId });
   }, [step, packageId, nightId, seatId, onPreviewChange]);
 
-  function logCheckoutCallback(event: string, payload: unknown) {
-    void fetch("/api/doku/checkout-callback", {
+  function logSnapCallback(event: string, payload: unknown) {
+    void fetch("/api/midtrans/snap-callback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -206,18 +210,35 @@ export default function ReserveForm({
       }
 
       orderIdRef.current = result.orderId;
+      const confirmedUrl = `/reserve/confirmed?order_id=${encodeURIComponent(result.orderId)}`;
       setPaying(true);
       try {
-        const loadCheckout = await waitForJokulCheckout();
-        logCheckoutCallback("overlay_open", {
-          payment_url: result.paymentUrl,
+        const snap = await waitForSnap();
+        snap.pay(result.snapToken, {
+          onSuccess: (payload) => {
+            logSnapCallback("onSuccess", payload);
+            router.push(confirmedUrl);
+          },
+          onPending: (payload) => {
+            logSnapCallback("onPending", payload);
+            router.push(confirmedUrl);
+          },
+          onError: (payload) => {
+            logSnapCallback("onError", payload);
+            setError("Payment failed. Please try again.");
+          },
+          onClose: () => {
+            logSnapCallback("onClose", {});
+            setError(
+              "Payment window closed. Your table stays held for 60 minutes while you finish paying.",
+            );
+          },
         });
-        loadCheckout(result.paymentUrl);
       } catch (err) {
-        logCheckoutCallback("overlay_error", {
+        logSnapCallback("load_error", {
           message: err instanceof Error ? err.message : "unknown",
         });
-        window.location.assign(result.paymentUrl);
+        window.location.assign(result.redirectUrl);
         return;
       } finally {
         setPaying(false);
@@ -229,10 +250,11 @@ export default function ReserveForm({
 
   return (
     <>
-      {enabled && checkoutJsUrl ? (
+      {enabled && snapJsUrl ? (
         <Script
-          id="doku-checkout"
-          src={checkoutJsUrl}
+          id="midtrans-snap"
+          src={snapJsUrl}
+          data-client-key={clientKey}
           strategy="afterInteractive"
         />
       ) : null}
@@ -565,8 +587,8 @@ export default function ReserveForm({
         {step === "pay" && !enabled ? (
           <p className="inline-flex items-center gap-2 text-sm text-white/55">
             <span className="pass-signal" aria-hidden="true" />
-            DOKU is not configured yet. Add the client ID and secret key before
-            taking payments.
+            Midtrans is not configured yet. Add the server and client keys
+            before taking payments.
           </p>
         ) : null}
 

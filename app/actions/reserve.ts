@@ -4,13 +4,13 @@ import { headers } from "next/headers";
 
 import { insertAuditLogSafe, requestMeta } from "@/lib/audit";
 import { publicMessage } from "@/lib/errors";
-import {
-  CHECKOUT_PAYMENT_DUE_MINUTES,
-  createCheckoutPayment,
-  isDokuConfigured,
-  newOrderId,
-} from "@/lib/doku";
 import { sendReservationInvoice } from "@/lib/invoice";
+import {
+  createSnapTransaction,
+  isMidtransConfigured,
+  newOrderId,
+  PAYMENT_DUE_MINUTES,
+} from "@/lib/midtrans";
 import {
   claimReservationSeat,
   expireReservationHoldSafe,
@@ -31,7 +31,7 @@ import {
 } from "@/lib/tables";
 
 export type CreateReservationResult =
-  | { ok: true; paymentUrl: string; orderId: string }
+  | { ok: true; snapToken: string; redirectUrl: string; orderId: string }
   | { ok: false; error: string };
 
 export type SelectSeatResult =
@@ -55,13 +55,6 @@ async function requestOrigin() {
 function asNightId(value: unknown): NightId | undefined {
   if (value === "oct-30" || value === "oct-31") return value;
   return undefined;
-}
-
-
-function checkoutExpiry(expiredDate?: string) {
-  if (!expiredDate) return undefined;
-  const parsed = new Date(expiredDate);
-  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 }
 
 export async function listTakenSeatIdsAction(
@@ -104,7 +97,7 @@ export async function createReservation(
     return result;
   };
 
-  if (!isDokuConfigured()) {
+  if (!isMidtransConfigured()) {
     return respond({ ok: false, error: "Payment is not configured yet." });
   }
 
@@ -158,7 +151,7 @@ export async function createReservation(
     seatId,
   };
   const expiresAt = new Date(
-    Date.now() + CHECKOUT_PAYMENT_DUE_MINUTES * 60 * 1000,
+    Date.now() + PAYMENT_DUE_MINUTES * 60 * 1000,
   );
 
   await releaseExpiredHoldsSafe();
@@ -186,23 +179,28 @@ export async function createReservation(
   }
 
   try {
-    const checkout = await createCheckoutPayment(orderId, reservation, {
-      callbackUrl: `${origin}/reserve/confirmed?order_id=${encodeURIComponent(orderId)}`,
-      notificationUrl: `${origin}/api/doku/notification`,
+    const snap = await createSnapTransaction(orderId, reservation, {
+      finishUrl: `${origin}/reserve/confirmed`,
+      notificationUrl: `${origin}/api/midtrans/notification`,
     });
 
     try {
       await updateReservationCheckout(orderId, {
-        paymentUrl: checkout.paymentUrl,
-        paymentToken: checkout.tokenId,
-        expiresAt: checkoutExpiry(checkout.expiredDate) ?? expiresAt,
+        paymentUrl: snap.redirectUrl,
+        paymentToken: snap.token,
+        expiresAt,
       });
     } catch (error) {
       console.error("[reservations] failed to store checkout", error);
     }
 
     return respond(
-      { ok: true, paymentUrl: checkout.paymentUrl, orderId },
+      {
+        ok: true,
+        snapToken: snap.token,
+        redirectUrl: snap.redirectUrl,
+        orderId,
+      },
       orderId,
     );
   } catch (error) {
