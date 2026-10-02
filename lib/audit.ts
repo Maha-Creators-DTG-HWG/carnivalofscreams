@@ -34,12 +34,24 @@ export function clientIpFromHeaders(headerList: Headers) {
   return headerList.get("x-real-ip");
 }
 
+// Only these request headers are stored with a callback. A denylist missed
+// platform credentials (x-vercel-oidc-token, x-vercel-sc-headers), so keep
+// what helps trace a delivery and drop everything else.
+const STORED_HEADERS = new Set([
+  "content-type",
+  "user-agent",
+  "x-forwarded-for",
+  "x-real-ip",
+  "x-vercel-id",
+  "x-vercel-ip-country",
+  "x-vercel-ip-city",
+]);
+
 export function headerRecord(headerList: Headers) {
   const record: Record<string, string> = {};
   headerList.forEach((value, key) => {
     const lower = key.toLowerCase();
-    if (lower === "cookie" || lower === "authorization") return;
-    record[lower] = value;
+    if (STORED_HEADERS.has(lower)) record[lower] = value;
   });
   return record;
 }
