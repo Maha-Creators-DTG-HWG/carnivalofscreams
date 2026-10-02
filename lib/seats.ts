@@ -27,7 +27,7 @@ function seats(
 
 export const SEATS: VenueSeat[] = [
   ...seats("etius", "etius", "E", "Etius", 4),
-  ...seats("luxer", "luxer", "L", "Luxer", 26),
+  ...seats("luxer", "luxer", "L", "Luxer", 27),
   ...seats("tivex", "tivex", "T", "Tivex", 17),
   ...seats("perio", "perio", "P", "Perio", 3),
   ...seats("onomy", "onomy", "O", "Onomy", 10),
