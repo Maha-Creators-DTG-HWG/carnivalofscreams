@@ -25,6 +25,7 @@ export type ReservationRecord = {
   whatsappMessageId: string | null;
   whatsappSentAt: Date | null;
   invoiceEmailSentAt: Date | null;
+  createdAt: Date | null;
 };
 
 type ReservationRow = {
@@ -49,6 +50,7 @@ type ReservationRow = {
   whatsapp_message_id: string | null;
   whatsapp_sent_at: string | null;
   invoice_email_sent_at: string | null;
+  created_at: string | null;
 };
 
 function asNightId(value: string): NightId | undefined {
@@ -62,7 +64,7 @@ function toDate(value: string | null) {
 }
 
 const RESERVATION_COLUMNS =
-  "order_id, name, nik, email, phone, night_id, package_id, party_size, notes, amount_idr, status, payment_url, payment_token, channel_id, transaction_status, paid_at, seat_id, expires_at, whatsapp_message_id, whatsapp_sent_at, invoice_email_sent_at";
+  "order_id, name, nik, email, phone, night_id, package_id, party_size, notes, amount_idr, status, payment_url, payment_token, channel_id, transaction_status, paid_at, seat_id, expires_at, whatsapp_message_id, whatsapp_sent_at, invoice_email_sent_at, created_at";
 
 function nowIso() {
   return new Date().toISOString();
@@ -95,6 +97,7 @@ function mapReservation(row: ReservationRow): ReservationRecord | null {
     whatsappMessageId: row.whatsapp_message_id,
     whatsappSentAt: toDate(row.whatsapp_sent_at),
     invoiceEmailSentAt: toDate(row.invoice_email_sent_at),
+    createdAt: toDate(row.created_at),
   };
 }
 
@@ -194,6 +197,20 @@ export async function getReservationSafe(orderId: string) {
     console.error("[reservations] failed to load reservation", error);
     return null;
   }
+}
+
+export async function listReservations() {
+  await releaseExpiredHolds();
+  const { data, error } = await getDb()
+    .from("reservations")
+    .select(RESERVATION_COLUMNS)
+    .order("created_at", { ascending: false })
+    .limit(1000)
+    .returns<ReservationRow[]>();
+  if (error) throw error;
+  return data
+    .map(mapReservation)
+    .filter((row): row is ReservationRecord => row !== null);
 }
 
 export async function releaseExpiredHolds() {
