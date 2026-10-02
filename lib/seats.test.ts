@@ -4,12 +4,12 @@ import test from "node:test";
 import { getSeat, SEATS, seatsForPackage } from "./seats";
 
 test("catalog has every COS26 table", () => {
-  assert.equal(seatsForPackage("luxer").length, 26);
+  assert.equal(seatsForPackage("luxer").length, 27);
   assert.equal(seatsForPackage("etius").length, 4);
   assert.equal(seatsForPackage("tivex").length, 17);
   assert.equal(seatsForPackage("perio").length, 3);
   assert.equal(seatsForPackage("onomy").length, 10);
-  assert.equal(SEATS.length, 60);
+  assert.equal(SEATS.length, 61);
 
   const ids = SEATS.map((seat) => seat.id);
   assert.equal(new Set(ids).size, ids.length);

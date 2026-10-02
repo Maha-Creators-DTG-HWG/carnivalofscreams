@@ -16,7 +16,7 @@ type Props = {
   onSelectSeat?: (seatId: string) => void;
 };
 
-const RING = 30;
+const RING = 24;
 
 export default function SeatMap({
   className,

@@ -27,7 +27,7 @@ export const TABLE_PACKAGES = [
     tickets: 3,
     priceIdr: 450_000,
     minSpendIdr: 6_000_000,
-    range: "L1–L26",
+    range: "L1–L27",
     blurb: "Six seats on a reserved sofa. Booking fee includes three event tickets.",
     reservation: "1 sofa reservation",
   },

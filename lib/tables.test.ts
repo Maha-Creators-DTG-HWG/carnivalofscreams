@@ -19,7 +19,7 @@ test("COS26 areas match the plotting guide", () => {
   assert.equal(getTablePackage("luxer")?.minSpendIdr, 6_000_000);
   assert.equal(getTablePackage("luxer")?.seats, 6);
   assert.equal(getTablePackage("luxer")?.tickets, 3);
-  assert.equal(getTablePackage("luxer")?.range, "L1–L26");
+  assert.equal(getTablePackage("luxer")?.range, "L1–L27");
 
   assert.equal(getTablePackage("etius")?.priceIdr, 450_000);
   assert.equal(getTablePackage("etius")?.range, "E1–E4");
