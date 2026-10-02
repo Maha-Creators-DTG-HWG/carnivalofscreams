@@ -11,7 +11,7 @@ export default function ArrivalGround() {
           sizes="100vw"
           className="object-cover object-[center_58%] opacity-70"
         />
-        <div className="absolute inset-0 bg-linear-to-t from-ink via-ink/30 to-ink/90" />
+        <div className="absolute inset-0 bg-linear-to-t from-ink via-ink/30 to-ink" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_100%,rgba(70,100,150,0.18),transparent_55%)]" />
       </div>
     </div>

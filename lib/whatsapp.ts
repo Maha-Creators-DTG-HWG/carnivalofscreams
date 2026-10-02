@@ -1,4 +1,4 @@
-import { dokuRequestHeaders, isDokuProduction, toWhatsAppPhone } from "./doku";
+import { dokuRequestHeaders, isDokuProduction } from "./doku";
 import type { ReservationRecord } from "./reservations";
 import { getSeat } from "./seats";
 import { getNight } from "./tables";
@@ -12,6 +12,13 @@ type WhatsAppResponse = {
     type?: string;
   };
 };
+
+export function toWhatsAppPhone(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("62")) return `0${digits.slice(2)}`;
+  if (digits.startsWith("0")) return digits;
+  return `0${digits}`;
+}
 
 export function getWhatsAppTemplateId() {
   return process.env.DOKU_WHATSAPP_TEMPLATE_ID ?? "";

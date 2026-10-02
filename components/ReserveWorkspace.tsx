@@ -12,10 +12,11 @@ import { getTablePackage } from "@/lib/tables";
 
 type Props = {
   enabled: boolean;
-  checkoutJsUrl: string;
+  snapJsUrl: string;
+  clientKey: string;
 };
 
-export default function ReserveWorkspace({ enabled, checkoutJsUrl }: Props) {
+export default function ReserveWorkspace({ enabled, snapJsUrl, clientKey }: Props) {
   const [preview, setPreview] = useState<ReservePreview>({
     step: "night",
     packageId: null,
@@ -87,7 +88,8 @@ export default function ReserveWorkspace({ enabled, checkoutJsUrl }: Props) {
           <div className="pass-panel p-5 sm:p-6">
             <ReserveForm
               enabled={enabled}
-              checkoutJsUrl={checkoutJsUrl}
+              snapJsUrl={snapJsUrl}
+              clientKey={clientKey}
               takenSeatIds={takenSeatIds}
               seatId={seatId}
               onSeatChange={setSeatId}

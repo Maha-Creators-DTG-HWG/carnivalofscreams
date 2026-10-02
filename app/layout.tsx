@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import WhatsAppButton from "@/components/WhatsAppButton";
+
 import { angie } from "./fonts";
 import "./globals.css";
 
@@ -29,7 +31,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${angie.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <WhatsAppButton />
+      </body>
       <GoogleAnalytics gaId="G-F8T6K8MGLZ" />
     </html>
   );

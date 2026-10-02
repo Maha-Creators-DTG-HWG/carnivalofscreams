@@ -4,18 +4,18 @@ import Link from "next/link";
 import SeatPicker from "@/components/SeatPicker";
 import {
   insertAuditLogSafe,
-  insertDokuCallbackSafe,
+  insertMidtransCallbackSafe,
   requestMeta,
 } from "@/lib/audit";
+import { sendReservationInvoice } from "@/lib/invoice";
 import {
-  getOrderStatus,
+  getTransactionStatus,
   isExpiredStatus,
   isFailedStatus,
   isPaidStatus,
   isPendingStatus,
   summarizeReservation,
-} from "@/lib/doku";
-import { sendReservationInvoice } from "@/lib/invoice";
+} from "@/lib/midtrans";
 import {
   expireReservationHoldSafe,
   getReservationSafe,
@@ -57,20 +57,15 @@ export default async function ReservationConfirmedPage({
 }: Props) {
   const params = await searchParams;
   const query = flattenSearchParams(params);
-  const orderId = (
-    query.order_id ??
-    query.orderId ??
-    query.invoice_number ??
-    ""
-  ).trim();
+  const orderId = (query.order_id ?? query.orderId ?? "").trim();
   const meta = await requestMeta();
 
-  await insertDokuCallbackSafe({
+  await insertMidtransCallbackSafe({
     source: "window_redirect",
     event: "finish",
     orderId: orderId || null,
     statusCode: query.status_code ?? null,
-    transactionStatus: query.transaction_status ?? query.status ?? null,
+    transactionStatus: query.transaction_status ?? null,
     ip: meta.ip,
     userAgent: meta.userAgent,
     payload: query,
@@ -91,7 +86,7 @@ export default async function ReservationConfirmedPage({
       <StatusShell
         kicker="Reservation"
         title="We could not find that order."
-        body="Check the link from DOKU, or start a new table hold."
+        body="Check the link from Midtrans, or start a new table hold."
         action={{ href: "/reserve", label: "Reserve a table" }}
       />
     );
@@ -104,14 +99,14 @@ export default async function ReservationConfirmedPage({
   }
   let status;
   try {
-    status = await getOrderStatus(orderId);
+    status = await getTransactionStatus(orderId);
   } catch {
     if (!reservation) {
       return (
         <StatusShell
           kicker="Reservation"
           title="We could not check that payment."
-          body="Try again in a moment. If you already paid, keep your DOKU receipt."
+          body="Try again in a moment. If you already paid, keep your Midtrans receipt."
           action={{ href: "/reserve", label: "Reserve a table" }}
         />
       );
@@ -121,16 +116,17 @@ export default async function ReservationConfirmedPage({
   const transactionStatus =
     status?.transactionStatus ?? reservation?.transactionStatus ?? undefined;
   const paid =
-    reservation?.status === "paid" || isPaidStatus(transactionStatus);
-  const failed = isFailedStatus(transactionStatus, status?.orderStatus);
-  const pending = isPendingStatus(transactionStatus, status?.orderStatus);
+    reservation?.status === "paid" ||
+    isPaidStatus(status?.transactionStatus, status?.fraudStatus);
+  const failed = isFailedStatus(transactionStatus);
+  const pending = isPendingStatus(transactionStatus);
 
   if (paid && reservation?.status !== "paid") {
     reservation =
       (await markReservationPaidSafe({
         orderId,
-        transactionStatus: transactionStatus ?? "SUCCESS",
-        channelId: status?.channelId ?? reservation?.channelId,
+        transactionStatus: transactionStatus ?? "settlement",
+        channelId: status?.paymentType ?? reservation?.channelId,
       })) ?? reservation;
   }
 
@@ -140,59 +136,42 @@ export default async function ReservationConfirmedPage({
 
   const summary = summarizeReservation({
     orderId,
-    amount: status?.amount ?? reservation?.amountIdr,
+    amount:
+      reservation?.amountIdr ??
+      (status?.grossAmount ? Number.parseFloat(status.grossAmount) : undefined),
     nightId: reservation?.nightId,
     packageId: reservation?.packageId,
   });
   const seat = reservation?.seatId ? getSeat(reservation.seatId) : undefined;
 
   const details = (
-    <ul className="mt-8 space-y-2 text-sm text-white/65">
-      <li>
-        <span className="text-white/40">Booking code</span> {orderId}
-      </li>
-      {reservation?.name ? (
-        <li>
-          <span className="text-white/40">Name</span> {reservation.name}
-        </li>
-      ) : null}
-      {reservation?.nik ? (
-        <li>
-          <span className="text-white/40">NIK</span> {reservation.nik}
-        </li>
-      ) : null}
-      {reservation?.phone ? (
-        <li>
-          <span className="text-white/40">Phone</span> {reservation.phone}
-        </li>
-      ) : null}
-      {reservation?.email ? (
-        <li>
-          <span className="text-white/40">Email</span> {reservation.email}
-        </li>
-      ) : null}
-      {summary.night ? (
-        <li>
-          <span className="text-white/40">Day</span> {summary.night.day} ·{" "}
-          {summary.night.label}
-        </li>
-      ) : null}
-      {summary.table ? (
-        <li>
-          <span className="text-white/40">Area</span> {summary.table.name}
-        </li>
-      ) : null}
-      {seat ? (
-        <li>
-          <span className="text-white/40">Table</span> {seat.label}
-        </li>
-      ) : null}
-      {summary.amountLabel ? (
-        <li>
-          <span className="text-white/40">Amount</span> {summary.amountLabel}
-        </li>
-      ) : null}
-    </ul>
+    <div className="pass-panel mt-10 text-left">
+      <div className="border-b border-white/10 px-5 py-4 sm:px-6">
+        <p className="font-heading text-[11px] tracking-[0.32em] text-white/55">
+          Booking code
+        </p>
+        <p className="mt-1.5 text-lg font-medium tracking-[0.04em] text-gold-bright normal-case tabular-nums select-all">
+          {orderId}
+        </p>
+      </div>
+      <DetailList
+        rows={[
+          ["Day", summary.night && `${summary.night.day} · ${summary.night.label}`],
+          ["Area", summary.table?.name],
+          ["Table", seat?.label],
+          ["Booking fee", summary.amountLabel],
+        ]}
+      />
+      <DetailList
+        className="border-t border-white/10"
+        rows={[
+          ["Name", reservation?.name],
+          ["NIK", reservation?.nik && maskNik(reservation.nik)],
+          ["Phone", reservation?.phone],
+          ["Email", reservation?.email],
+        ]}
+      />
+    </div>
   );
 
   if (paid && reservation && !reservation.seatId) {
@@ -236,11 +215,11 @@ export default async function ReservationConfirmedPage({
 
   const expired =
     reservation?.status === "expired" ||
-    isExpiredStatus(transactionStatus, status?.orderStatus);
+    isExpiredStatus(transactionStatus);
 
   if (expired) {
     if (reservation?.status === "pending") {
-      await expireReservationHoldSafe(orderId, transactionStatus ?? "EXPIRED");
+      await expireReservationHoldSafe(orderId, transactionStatus ?? "expire");
     }
     return (
       <StatusShell
@@ -259,7 +238,7 @@ export default async function ReservationConfirmedPage({
       <StatusShell
         kicker="Awaiting payment"
         title="Finish paying to keep this table."
-        body="Complete the transfer in DOKU. This table stays held until the 60-minute payment window closes."
+        body="Complete the transfer in Midtrans. This table stays held until the 60-minute payment window closes."
         action={{ href: "/reserve", label: "Start again" }}
       >
         {details}
@@ -267,7 +246,7 @@ export default async function ReservationConfirmedPage({
     );
   }
 
-  if (!status?.transactionStatus && status?.orderStatus !== "ORDER_GENERATED") {
+  if (!status?.transactionStatus) {
     return (
       <StatusShell
         kicker="Reservation"
@@ -290,6 +269,36 @@ export default async function ReservationConfirmedPage({
   );
 }
 
+// The page is reachable by anyone holding the order link, so keep the ID number partial.
+function maskNik(nik: string) {
+  return nik.length > 4 ? `•••• ${nik.slice(-4)}` : nik;
+}
+
+function DetailList({
+  rows,
+  className = "",
+}: {
+  rows: [label: string, value: string | null | undefined][];
+  className?: string;
+}) {
+  const visible = rows.filter(([, value]) => value);
+  if (visible.length === 0) return null;
+  return (
+    <dl
+      className={`grid grid-cols-[5.5rem_minmax(0,1fr)] gap-x-3 sm:grid-cols-[7rem_minmax(0,1fr)] sm:gap-x-4 gap-y-2.5 px-5 py-4 text-sm sm:px-6 ${className}`}
+    >
+      {visible.map(([label, value]) => (
+        <div key={label} className="contents">
+          <dt className="text-white/55">{label}</dt>
+          <dd className="min-w-0 break-words text-white/90 tabular-nums">
+            {value}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 function StatusShell({
   kicker,
   title,
@@ -308,10 +317,10 @@ function StatusShell({
       <p className="font-heading text-[11px] tracking-[0.42em] text-white/55 sm:text-xs">
         {kicker}
       </p>
-      <h1 className="pass-title mt-5 font-heading text-4xl tracking-[0.14em] text-white sm:text-5xl">
+      <h1 className="pass-title mt-5 font-heading text-4xl tracking-[0.14em] text-balance text-white sm:text-5xl">
         {title}
       </h1>
-      <p className="mt-6 text-sm leading-relaxed text-white/55 sm:text-base">
+      <p className="mx-auto mt-6 max-w-md text-sm leading-relaxed text-pretty text-white/65 sm:text-base">
         {body}
       </p>
       {children}

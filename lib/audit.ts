@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 
 import { getDb } from "./db";
-import { readDokuStatus } from "./doku";
+import { readMidtransStatus } from "./midtrans";
 
 export type AuditEvent = {
   event: string;
@@ -13,8 +13,8 @@ export type AuditEvent = {
   payload?: unknown;
 };
 
-export type DokuCallbackEvent = {
-  source: "http_notification" | "checkout_js" | "window_redirect";
+export type MidtransCallbackEvent = {
+  source: "http_notification" | "snap_js" | "window_redirect";
   event?: string | null;
   orderId?: string | null;
   transactionId?: string | null;
@@ -77,8 +77,8 @@ export async function insertAuditLogSafe(entry: AuditEvent) {
   }
 }
 
-export async function insertDokuCallback(entry: DokuCallbackEvent) {
-  const { error } = await getDb().from("doku_callbacks").insert({
+export async function insertMidtransCallback(entry: MidtransCallbackEvent) {
+  const { error } = await getDb().from("midtrans_callbacks").insert({
     source: entry.source,
     event: entry.event ?? null,
     order_id: entry.orderId ?? null,
@@ -95,43 +95,21 @@ export async function insertDokuCallback(entry: DokuCallbackEvent) {
   if (error) throw error;
 }
 
-export async function insertDokuCallbackSafe(entry: DokuCallbackEvent) {
+export async function insertMidtransCallbackSafe(entry: MidtransCallbackEvent) {
   try {
-    await insertDokuCallback(entry);
+    await insertMidtransCallback(entry);
   } catch (error) {
-    console.error("[audit] failed to insert doku callback", error);
+    console.error("[audit] failed to insert midtrans callback", error);
   }
-}
-
-function stringOrNull(value: unknown) {
-  if (typeof value === "string" && value.length > 0) return value;
-  if (typeof value === "number") return String(value);
-  return null;
 }
 
 export function callbackFields(payload: unknown) {
-  const status = readDokuStatus(payload);
-  if (!payload || typeof payload !== "object") {
-    return {
-      orderId: null as string | null,
-      transactionId: null as string | null,
-      transactionStatus: null as string | null,
-      statusCode: null as string | null,
-      paymentType: null as string | null,
-    };
-  }
-
-  const record = payload as Record<string, unknown>;
+  const status = readMidtransStatus(payload);
   return {
-    orderId:
-      status.invoiceNumber ??
-      stringOrNull(record.order_id) ??
-      stringOrNull(record.invoice_number),
-    transactionId:
-      status.originalRequestId ?? stringOrNull(record.transaction_id),
-    transactionStatus:
-      status.transactionStatus ?? stringOrNull(record.transaction_status),
-    statusCode: stringOrNull(record.status_code),
-    paymentType: status.channelId ?? stringOrNull(record.payment_type),
+    orderId: status.orderId ?? null,
+    transactionId: status.transactionId ?? null,
+    transactionStatus: status.transactionStatus ?? null,
+    statusCode: status.statusCode ?? null,
+    paymentType: status.paymentType ?? null,
   };
 }

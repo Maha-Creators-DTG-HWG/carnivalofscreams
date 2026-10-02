@@ -13,3 +13,6 @@ export function getSiteUrl() {
   }
   return "http://localhost:3000";
 }
+
+// wa.me wants the number in international format without "+" or spaces.
+export const WHATSAPP_URL = "https://wa.me/6285284652067";
