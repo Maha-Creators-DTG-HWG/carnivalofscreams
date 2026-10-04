@@ -76,3 +76,49 @@ export function Th({ children, className }: { children?: React.ReactNode; classN
     </th>
   );
 }
+
+// Shown by loading.tsx while a page's data is on its way, in the same frame
+// as the real header and filter bar so nothing jumps when it lands.
+export function PageSkeleton({
+  title,
+  stats,
+  filters,
+  rows = 8,
+}: {
+  title: string;
+  stats: number;
+  filters: number;
+  rows?: number;
+}) {
+  return (
+    <div aria-busy="true" aria-label={`Loading ${title}`}>
+      <PageHeader title={title}>
+        <div className="flex flex-wrap gap-x-10 gap-y-5 sm:gap-x-12">
+          {Array.from({ length: stats }, (_, i) => (
+            <div key={i}>
+              <div className="h-[11px] w-14 animate-pulse bg-white/10" />
+              <div className="mt-2.5 h-6 w-20 animate-pulse bg-white/10" />
+            </div>
+          ))}
+        </div>
+      </PageHeader>
+      <div className="flex flex-col gap-4 border-b border-white/12 py-5 sm:flex-row sm:items-center sm:justify-between">
+        {Array.from({ length: filters }, (_, i) => (
+          <div key={i} className="h-9 w-full animate-pulse border border-white/15 bg-white/[0.03] sm:w-64" />
+        ))}
+      </div>
+      <ul className="divide-y divide-white/8">
+        {Array.from({ length: rows }, (_, i) => (
+          <li key={i} className="flex items-center gap-6 py-5">
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-40 animate-pulse bg-white/10" />
+              <div className="h-3 w-64 max-w-full animate-pulse bg-white/[0.06]" />
+            </div>
+            <div className="hidden h-4 w-24 animate-pulse bg-white/10 sm:block" />
+            <div className="h-9 w-24 animate-pulse bg-white/[0.06]" />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}

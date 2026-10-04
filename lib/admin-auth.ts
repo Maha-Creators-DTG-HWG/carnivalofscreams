@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 import { createClient } from "./supabase/server";
 
@@ -6,10 +7,16 @@ import { createClient } from "./supabase/server";
 // read, so a page never renders customer data on the proxy's word alone.
 // Every signed-in account is an admin, so public sign-ups must stay off in
 // Supabase Auth.
-export async function requireAdmin(path: string) {
+// The layout and the page both ask; cache() makes that one auth check per
+// request.
+const getClaims = cache(async () => {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
-  const claims = data?.claims;
+  return data?.claims;
+});
+
+export async function requireAdmin(path: string) {
+  const claims = await getClaims();
   if (!claims || claims.is_anonymous) {
     redirect(`/auth/login?${new URLSearchParams({ next: path })}`);
   }
