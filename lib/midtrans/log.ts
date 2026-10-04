@@ -96,6 +96,55 @@ export async function listMidtransCallbacks(options: {
   return data.map(mapCallback);
 }
 
+// What digestCallbacks reads, without the payload JSON: the reservations
+// page digests thousands of rows and only needs fraud_status out of it.
+const DIGEST_COLUMNS =
+  "id, created_at, source, event, order_id, transaction_status, payment_type, signature_valid, fraud_status:payload->>fraud_status";
+
+type DigestRow = Pick<
+  CallbackRow,
+  | "id"
+  | "created_at"
+  | "source"
+  | "event"
+  | "order_id"
+  | "transaction_status"
+  | "payment_type"
+  | "signature_valid"
+> & { fraud_status: string | null };
+
+export async function listMidtransDigests(limit = 5000) {
+  const { data, error } = await getDb()
+    .from("midtrans_callbacks")
+    .select(DIGEST_COLUMNS)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(limit)
+    .returns<DigestRow[]>();
+  if (error) throw error;
+  return digestByOrder(
+    data.map(
+      (row): MidtransCallback => ({
+        id: row.id,
+        createdAt: new Date(row.created_at),
+        source: row.source,
+        event: row.event,
+        orderId: row.order_id,
+        transactionId: null,
+        transactionStatus: row.transaction_status,
+        fraudStatus: row.fraud_status,
+        statusCode: null,
+        paymentType: row.payment_type,
+        grossAmount: null,
+        signatureValid: row.signature_valid,
+        ip: null,
+        userAgent: null,
+        payload: null,
+      }),
+    ),
+  );
+}
+
 export type MidtransDigest = {
   /** Signed webhook calls from Midtrans for this order. */
   verified: number;

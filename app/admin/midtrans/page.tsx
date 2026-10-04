@@ -1,4 +1,3 @@
-import { cn } from "cn";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -6,7 +5,8 @@ import { requireAdmin } from "@/lib/admin-auth";
 
 import { listMidtransCallbacks, statusTone, type MidtransCallback } from "@/lib/midtrans/log";
 
-import { dateTime, Dot, PageHeader, paymentTypeLabel, Stat, Th } from "../ui";
+import { dateTime, Dot, PageHeader, paymentTypeLabel, Stat } from "../ui";
+import CallbackList from "./CallbackList";
 
 export const metadata: Metadata = {
   title: "Midtrans",
@@ -28,24 +28,13 @@ function one(value: string | string[] | undefined) {
 }
 
 export default async function MidtransPage({ searchParams }: PageProps<"/admin/midtrans">) {
-  await requireAdmin("/admin/midtrans");
-  const params = await searchParams;
+  const [, params] = await Promise.all([requireAdmin("/admin/midtrans"), searchParams]);
   const order = one(params.order);
   const orderId = order && ORDER_ID_RE.test(order) ? order : undefined;
-  const webhooksOnly = one(params.source) === "webhook";
 
   const callbacks = await listMidtransCallbacks({ orderId });
   const webhooks = callbacks.filter((row) => row.source === "http_notification");
   const signed = webhooks.filter((row) => row.signatureValid === true);
-  const shown = webhooksOnly ? webhooks : callbacks;
-
-  function href(next: { webhook?: boolean }) {
-    const query = new URLSearchParams();
-    if (orderId) query.set("order", orderId);
-    if (next.webhook) query.set("source", "webhook");
-    const qs = query.toString();
-    return qs ? `/admin/midtrans?${qs}` : "/admin/midtrans";
-  }
 
   return (
     <>
@@ -63,69 +52,16 @@ export default async function MidtransPage({ searchParams }: PageProps<"/admin/m
         </dl>
       </PageHeader>
 
-      <div className="flex flex-col gap-4 border-b border-white/12 py-5 sm:flex-row sm:items-center sm:justify-between">
-        <div role="group" aria-label="Source" className="flex border border-white/15 p-0.5 text-[13px]">
-          {[
-            { label: "Everything", count: callbacks.length, href: href({}), active: !webhooksOnly },
-            {
-              label: "Webhooks",
-              count: webhooks.length,
-              href: href({ webhook: true }),
-              active: webhooksOnly,
-            },
-          ].map((option) => (
-            <Link
-              key={option.label}
-              href={option.href}
-              aria-current={option.active ? "page" : undefined}
-              className={cn(
-                "flex h-8 flex-1 items-center justify-center gap-1.5 px-3 whitespace-nowrap transition-colors sm:flex-none",
-                option.active ? "bg-white text-ink" : "text-white/60 hover:text-white",
-              )}
-            >
-              {option.label}
-              <span className={cn("tabular-nums", option.active ? "text-ink/50" : "text-white/35")}>
-                {option.count}
-              </span>
-            </Link>
-          ))}
-        </div>
-        {orderId ? (
-          <p className="flex items-center gap-3 text-[13px]">
-            <span className="text-white/45">Booking</span>
-            <span className="font-mono text-xs text-white">{orderId}</span>
-            <Link href="/admin/midtrans" className="text-white/60 underline underline-offset-4 hover:text-white">
-              Clear
-            </Link>
-          </p>
-        ) : null}
-      </div>
-
-      {shown.length === 0 ? (
-        <p className="py-24 text-center text-sm text-white/50">
-          Nothing from Midtrans{orderId ? " for this booking" : ""} yet.
-        </p>
-      ) : (
-        <table className="w-full text-left text-sm">
-          <thead className="hidden md:table-header-group">
-            <tr className="text-[11px] tracking-[0.14em] text-white/40 uppercase">
-              <Th>Received</Th>
-              <Th>From</Th>
-              <Th>Booking</Th>
-              <Th>Midtrans status</Th>
-              <Th>Signature</Th>
-              <Th>
-                <span className="sr-only">Payload</span>
-              </Th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/8">
-            {shown.map((row) => (
-              <CallbackRow key={row.id} row={row} />
-            ))}
-          </tbody>
-        </table>
-      )}
+      {/* Rows render here on the server; the Everything/Webhooks switch only
+          picks which of them to show, in the browser. */}
+      <CallbackList
+        orderId={orderId}
+        rows={callbacks.map((row) => ({
+          id: row.id,
+          webhook: row.source === "http_notification",
+          node: <CallbackRow key={row.id} row={row} />,
+        }))}
+      />
     </>
   );
 }
