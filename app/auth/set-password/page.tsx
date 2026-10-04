@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import { LoginForm } from "@/components/login-form";
+import { SetPasswordForm } from "@/components/set-password-form";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Admin sign in",
+  title: "Set password",
   robots: { index: false, follow: false },
 };
 
-export default async function LoginPage({ searchParams }: PageProps<"/auth/login">) {
-  const { error } = await searchParams;
+export default async function SetPasswordPage() {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  if (!data?.claims) redirect("/auth/login?error=link");
 
   return (
     <main className="admin-surface dark relative isolate flex flex-1 items-center justify-center bg-ink px-4 py-16">
@@ -23,9 +27,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/auth/login
           </p>
           <h1 className="font-heading mt-4 text-3xl tracking-[0.14em] text-white">Admin</h1>
         </div>
-        <LoginForm
-          initialError={error === "link" ? "That link has expired or was already used. Ask for a new invite." : null}
-        />
+        <SetPasswordForm email={String(data.claims.email ?? "")} />
       </div>
     </main>
   );

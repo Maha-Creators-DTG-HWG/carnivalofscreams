@@ -7,69 +7,72 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { safeNextPath } from "@/lib/safe-next-path";
 import { createClient } from "@/lib/supabase/client";
 
-export function LoginForm({ initialError = null }: { initialError?: string | null }) {
-  const [error, setError] = useState<string | null>(initialError);
+export function SetPasswordForm({ email }: { email: string }) {
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const password = String(form.get("password") ?? "");
+    if (password !== String(form.get("confirm") ?? "")) {
+      setError("Passwords don't match.");
+      return;
+    }
     setIsLoading(true);
     setError(null);
 
-    const { error } = await createClient().auth.signInWithPassword({
-      email: String(form.get("email") ?? ""),
-      password: String(form.get("password") ?? ""),
-    });
+    const { error } = await createClient().auth.updateUser({ password });
     if (error) {
-      setError(error.message === "Invalid login credentials" ? "Wrong email or password." : error.message);
+      setError(error.message);
       setIsLoading(false);
       return;
     }
 
-    const next = new URLSearchParams(window.location.search).get("next");
-    router.replace(safeNextPath(next, "/admin"));
+    router.replace("/admin");
     router.refresh();
   }
 
   return (
     <Card className="border border-white/12 py-6 ring-0 backdrop-blur-[18px]">
       <CardHeader className="px-6">
-        <CardTitle className="text-base font-medium">Sign in</CardTitle>
-        <CardDescription>Reservations and payments. Admins only.</CardDescription>
+        <CardTitle className="text-base font-medium">Set your password</CardTitle>
+        <CardDescription>{email ? `For ${email}.` : "Choose a password to finish signing in."}</CardDescription>
       </CardHeader>
       <CardContent className="px-6">
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleSubmit}>
           <FieldGroup>
+            <input type="email" name="email" value={email} autoComplete="username" readOnly hidden />
             <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
+              <FieldLabel htmlFor="password">New password</FieldLabel>
               <Input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="username"
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                minLength={8}
                 required
                 className="h-10"
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="password">Password</FieldLabel>
+              <FieldLabel htmlFor="confirm">Confirm password</FieldLabel>
               <Input
-                id="password"
-                name="password"
+                id="confirm"
+                name="confirm"
                 type="password"
-                autoComplete="current-password"
+                autoComplete="new-password"
+                minLength={8}
                 required
                 className="h-10"
               />
             </Field>
             {error ? <FieldError>{error}</FieldError> : null}
             <Button type="submit" size="lg" className="h-10 w-full" disabled={isLoading}>
-              {isLoading ? "Signing in…" : "Sign in"}
+              {isLoading ? "Saving…" : "Save and continue"}
             </Button>
           </FieldGroup>
         </form>
