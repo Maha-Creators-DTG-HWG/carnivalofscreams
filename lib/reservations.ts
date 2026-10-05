@@ -1,7 +1,7 @@
 import { getDb } from "./db";
 import { PublicError } from "./errors";
 import { getSeat } from "./seats";
-import { asPackageId, type NightId, type TablePackageId } from "./tables";
+import { asPackageId, getTablePackage, type NightId, type TablePackageId } from "./tables";
 
 export type ReservationRecord = {
   orderId: string;
@@ -394,4 +394,78 @@ export async function markInvoiceEmailSentSafe(orderId: string) {
   } catch (error) {
     console.error("[reservations] failed to store invoice email time", error);
   }
+}
+
+// A table the team booked by hand (WhatsApp, walk-in). It is stored as a paid
+// reservation so the night+seat unique index blocks online checkout for it
+// with no extra check; channel_id "manual" tells it apart from Midtrans, and
+// every reader that counts money must check isManualBooking first.
+export const MANUAL_CHANNEL = "manual";
+
+export function isManualBooking(reservation: Pick<ReservationRecord, "channelId">) {
+  return reservation.channelId === MANUAL_CHANNEL;
+}
+
+export type GuestDetails = { name: string; phone: string; notes: string | null };
+
+export type ManualBooking = GuestDetails & { nightId: NightId; seatId: string };
+
+export async function insertManualBooking(entry: ManualBooking) {
+  const seat = getSeat(entry.seatId);
+  const pack = seat ? getTablePackage(seat.packageId) : undefined;
+  if (!seat || !pack) throw new PublicError("Unknown table.");
+
+  await releaseExpiredHolds();
+  const { error } = await getDb()
+    .from("reservations")
+    .insert({
+      order_id: `MAN-${entry.nightId}-${seat.short}-${Date.now().toString(36)}`,
+      name: entry.name,
+      email: "",
+      phone: entry.phone,
+      night_id: entry.nightId,
+      package_id: seat.packageId,
+      party_size: pack.seats,
+      notes: entry.notes,
+      amount_idr: 0,
+      status: "paid",
+      channel_id: MANUAL_CHANNEL,
+      transaction_status: MANUAL_CHANNEL,
+      paid_at: nowIso(),
+      seat_id: seat.id,
+    });
+  if (error) {
+    if (isUniqueViolation(error)) {
+      throw new PublicError("Someone is already holding or has booked this table.");
+    }
+    throw error;
+  }
+}
+
+export async function updateManualBooking(entry: ManualBooking) {
+  const { data, error } = await getDb()
+    .from("reservations")
+    .update({ name: entry.name, phone: entry.phone, notes: entry.notes })
+    .eq("night_id", entry.nightId)
+    .eq("seat_id", entry.seatId)
+    .eq("channel_id", MANUAL_CHANNEL)
+    .select("order_id");
+  if (error) throw error;
+  if (!data.length) throw new PublicError("This table is no longer switched off.");
+}
+
+export async function deleteManualBooking(nightId: NightId, seatId: string) {
+  const { data, error } = await getDb()
+    .from("reservations")
+    .delete()
+    .eq("night_id", nightId)
+    .eq("seat_id", seatId)
+    .eq("channel_id", MANUAL_CHANNEL)
+    .select(RESERVATION_COLUMNS)
+    .returns<ReservationRow[]>();
+  if (error) throw error;
+  // Nothing to delete means another admin already switched it back on; say so
+  // rather than offering an undo built from a stale copy.
+  if (!data.length) throw new PublicError("This table is already bookable online.");
+  return data;
 }

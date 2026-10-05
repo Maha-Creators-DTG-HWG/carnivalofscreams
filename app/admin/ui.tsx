@@ -26,6 +26,7 @@ const PAYMENT_TYPES: Record<string, string> = {
   cstore: "Convenience store",
   akulaku: "Akulaku",
   kredivo: "Kredivo",
+  manual: "Booked by hand",
 };
 
 export function paymentTypeLabel(paymentType: string | null | undefined) {
@@ -33,9 +34,18 @@ export function paymentTypeLabel(paymentType: string | null | undefined) {
   return PAYMENT_TYPES[paymentType] ?? paymentType;
 }
 
+// Status hues as CSS values, for SVG fills and inline styles. DOT below uses
+// the same theme tokens as classes.
+export const STATUS_COLOR = {
+  paid: "var(--color-emerald-400)",
+  pending: "var(--color-amber-300)",
+  manual: "var(--color-destructive)",
+} as const;
+
 export const DOT = {
   paid: "bg-emerald-400",
   pending: "bg-amber-300",
+  manual: "bg-destructive",
   failed: "bg-white/25",
   none: "bg-white/25",
   alert: "bg-[#c4453a] shadow-[0_0_8px_rgba(220,72,58,0.9)]",
@@ -119,6 +129,38 @@ export function PageSkeleton({
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+export function Segmented({
+  label,
+  options,
+}: {
+  label: string;
+  options: { label: string; active: boolean; onSelect: () => void; count?: number }[];
+}) {
+  return (
+    <div role="group" aria-label={label} className="flex border border-white/15 p-0.5 text-[13px]">
+      {options.map((option) => (
+        <button
+          key={option.label}
+          type="button"
+          aria-pressed={option.active}
+          onClick={option.onSelect}
+          className={cn(
+            "flex h-8 flex-1 items-center justify-center gap-1.5 px-3 whitespace-nowrap transition-colors sm:flex-none",
+            option.active ? "bg-white text-ink" : "text-white/60 hover:text-white",
+          )}
+        >
+          {option.label}
+          {option.count !== undefined ? (
+            <span className={cn("tabular-nums", option.active ? "text-ink/50" : "text-white/35")}>
+              {option.count}
+            </span>
+          ) : null}
+        </button>
+      ))}
     </div>
   );
 }

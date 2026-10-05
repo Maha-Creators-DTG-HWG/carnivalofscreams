@@ -8,7 +8,7 @@ import { useDeferredValue, useMemo } from "react";
 import type { MidtransDigest } from "@/lib/midtrans/log";
 import { formatIdr, NIGHTS, type NightId } from "@/lib/tables";
 
-import { dateTime, Dot, PageHeader, Stat, Th, time } from "./ui";
+import { dateTime, Dot, PageHeader, Segmented, Stat, Th, time } from "./ui";
 
 // Shaped on the server: only what the table shows, nothing from the payment
 // provider beyond the digest.
@@ -27,7 +27,7 @@ export type AdminReservation = {
   night: string;
   expiresAt: Date | null;
   createdAt: Date | null;
-  whatsappUrl: string;
+  whatsappUrl: string | null;
   test: boolean;
   midtrans: MidtransDigest | null;
 };
@@ -35,13 +35,17 @@ export type AdminReservation = {
 const STATUSES = [
   { id: "paid", label: "Paid", tone: "paid" },
   { id: "pending", label: "Holding", tone: "pending" },
+  { id: "manual", label: "By hand", tone: "manual" },
   { id: "expired", label: "Expired", tone: "none" },
 ] as const;
 
 type StatusId = (typeof STATUSES)[number]["id"];
 
 function getStatus(id: string) {
-  return STATUSES.find((status) => status.id === id) ?? STATUSES[2];
+  return (
+    STATUSES.find((status) => status.id === id) ??
+    STATUSES.find((status) => status.id === "expired")!
+  );
 }
 
 export default function ReservationsView({ rows }: { rows: AdminReservation[] }) {
@@ -94,6 +98,7 @@ export default function ReservationsView({ rows }: { rows: AdminReservation[] })
         <dl className="flex flex-wrap gap-x-10 gap-y-5 sm:gap-x-12">
           <Stat label="Paid" value={String(counts.paid ?? 0)} />
           <Stat label="Holding" value={String(counts.pending ?? 0)} />
+          <Stat label="By hand" value={String(counts.manual ?? 0)} />
           <Stat label="Collected" value={formatIdr(collected)} />
         </dl>
       </PageHeader>
@@ -200,11 +205,15 @@ function ReservationRow({ reservation }: RowProps) {
     <tr className={cn("transition-colors hover:bg-white/[0.03]", faded && "text-white/45")}>
       <td className="py-4 pr-5">
         <GuestName reservation={reservation} faded={faded} />
-        <div className="mt-1 text-[13px] text-white/45 tabular-nums">
-          {reservation.phone}
-          <span className="px-1.5 text-white/20">·</span>
-          {reservation.email}
-        </div>
+        {reservation.phone || reservation.email ? (
+          <div className="mt-1 text-[13px] text-white/45 tabular-nums">
+            {reservation.phone}
+            {reservation.phone && reservation.email ? (
+              <span className="px-1.5 text-white/20">·</span>
+            ) : null}
+            {reservation.email}
+          </div>
+        ) : null}
       </td>
       <td className="py-4 pr-5 whitespace-nowrap">
         <div className={cn(faded ? "text-white/55" : "text-white")}>
@@ -219,7 +228,9 @@ function ReservationRow({ reservation }: RowProps) {
         <MidtransLine reservation={reservation} />
       </td>
       <td className="py-4 pr-5 text-right whitespace-nowrap tabular-nums">
-        {reservation.status === "paid" ? (
+        {reservation.status === "manual" ? (
+          <span className="text-white/45">No fee online</span>
+        ) : reservation.status === "paid" ? (
           <span className="text-white">{formatIdr(reservation.amountIdr)}</span>
         ) : (
           <span className="text-white/45">{formatIdr(reservation.amountIdr)}</span>
@@ -229,7 +240,7 @@ function ReservationRow({ reservation }: RowProps) {
         ) : null}
       </td>
       <td className="py-4 pr-5 whitespace-nowrap">
-        <OrderLink orderId={reservation.orderId} />
+        <OrderLink reservation={reservation} />
         <div className="mt-1 text-[13px] text-white/40 tabular-nums">
           {reservation.createdAt ? dateTime.format(reservation.createdAt) : "—"}
           {reservation.nik ? (
@@ -262,12 +273,13 @@ function ReservationCard({ reservation }: RowProps) {
         </span>
         <span className="text-white/45">
           {" "}
-          · {night} · {area} · {formatIdr(reservation.amountIdr)}
+          · {night} · {area}
+          {reservation.status === "manual" ? null : ` · ${formatIdr(reservation.amountIdr)}`}
           {reservation.payment ? ` via ${reservation.payment}` : null}
         </span>
       </p>
       <p className="mt-1 text-[13px] text-white/40">
-        <OrderLink orderId={reservation.orderId} />
+        <OrderLink reservation={reservation} />
         {reservation.createdAt ? ` · ${dateTime.format(reservation.createdAt)}` : null}
       </p>
       {reservation.nik ? (
@@ -285,7 +297,7 @@ function ReservationCard({ reservation }: RowProps) {
 function GuestName({ reservation, faded }: RowProps & { faded: boolean }) {
   return (
     <div className={cn("flex items-center gap-2 font-medium", faded ? "text-white/60" : "text-white")}>
-      {reservation.name}
+      {reservation.name || <span className="font-normal text-white/55">No guest details yet</span>}
       {reservation.test ? (
         <span className="border border-white/15 px-1.5 py-px text-[10px] font-normal tracking-[0.14em] text-white/45 uppercase">
           Test
@@ -315,6 +327,8 @@ function StatusLabel({ reservation }: RowProps) {
 }
 
 function MidtransLine({ reservation }: RowProps) {
+  // Booked by hand never goes through Midtrans; there is no webhook to wait for.
+  if (reservation.status === "manual") return null;
   const { midtrans } = reservation;
   let tone: "paid" | "pending" | "none" | "alert" = "none";
   let text = "No webhook yet";
@@ -342,7 +356,12 @@ function MidtransLine({ reservation }: RowProps) {
   );
 }
 
-function OrderLink({ orderId }: { orderId: string }) {
+function OrderLink({ reservation }: RowProps) {
+  const { orderId } = reservation;
+  // Booked by hand has no Midtrans history to open.
+  if (reservation.status === "manual") {
+    return <span className="font-mono text-xs text-white/60">{orderId}</span>;
+  }
   return (
     <Link
       href={`/admin/midtrans?order=${encodeURIComponent(orderId)}`}
@@ -354,12 +373,13 @@ function OrderLink({ orderId }: { orderId: string }) {
 }
 
 function WhatsAppLink({ reservation }: RowProps) {
+  if (!reservation.whatsappUrl) return null;
   return (
     <a
       href={reservation.whatsappUrl}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={`Message ${reservation.name} on WhatsApp`}
+      aria-label={`Message ${reservation.name || reservation.phone} on WhatsApp`}
       className="btn-press inline-flex h-9 shrink-0 items-center gap-2 border border-white/20 px-3 text-[13px] text-white transition-[transform,border-color,background-color] hover:border-[#25D366]/60 hover:bg-[#25D366]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
     >
       <WhatsAppGlyph />
@@ -373,37 +393,5 @@ function WhatsAppGlyph() {
     <svg aria-hidden="true" viewBox="0 0 24 24" className="size-4 text-[#25D366]" fill="currentColor">
       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
     </svg>
-  );
-}
-
-function Segmented({
-  label,
-  options,
-}: {
-  label: string;
-  options: { label: string; active: boolean; onSelect: () => void; count?: number }[];
-}) {
-  return (
-    <div role="group" aria-label={label} className="flex border border-white/15 p-0.5 text-[13px]">
-      {options.map((option) => (
-        <button
-          key={option.label}
-          type="button"
-          aria-pressed={option.active}
-          onClick={option.onSelect}
-          className={cn(
-            "flex h-8 flex-1 items-center justify-center gap-1.5 px-3 whitespace-nowrap transition-colors sm:flex-none",
-            option.active ? "bg-white text-ink" : "text-white/60 hover:text-white",
-          )}
-        >
-          {option.label}
-          {option.count !== undefined ? (
-            <span className={cn("tabular-nums", option.active ? "text-ink/50" : "text-white/35")}>
-              {option.count}
-            </span>
-          ) : null}
-        </button>
-      ))}
-    </div>
   );
 }
