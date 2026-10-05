@@ -427,7 +427,7 @@ export default function ReserveForm({
                     }}
                     className={`min-w-12 border px-2 py-2 text-center font-heading text-[11px] tracking-[0.12em] transition-colors ${
                       taken
-                        ? "cursor-not-allowed border-white/10 bg-black/20 text-white/30 line-through"
+                        ? "cursor-not-allowed border-destructive bg-destructive/85 text-white line-through decoration-white/70"
                         : selected
                           ? "border-white bg-white text-black"
                           : "border-white/15 bg-black/30 text-white hover:border-white/50"
@@ -439,7 +439,7 @@ export default function ReserveForm({
               })}
             </div>
             <p className="mt-4 text-xs text-white/40">
-              Greyed-out numbers are already held for{" "}
+              Red numbers are already taken for{" "}
               {night?.short ?? "this night"}.
             </p>
           </div>

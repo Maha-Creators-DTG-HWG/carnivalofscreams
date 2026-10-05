@@ -47,7 +47,7 @@ Reference: the *The Arrival* poster (Carnaval of Screams lockup, custom metallic
 | Glass | `rgba(4, 7, 14, 0.52)` + `backdrop-filter: blur(18px)` | Pass panels, overlays |
 | Hairline | `rgba(255, 255, 255, 0.12–0.35)` | Panel borders, title rules |
 | Moonlight | `rgba(70, 100, 150, 0.18)` | Cool wash under landscape, never a fill |
-| Signal | `#c4453a` + soft glow | Sold out / alert only. A 6px dot, not a banner |
+| Signal | `#c4453a` + soft glow | Sold out / alert only. A 6px dot, not a banner. One exception: a taken table on the floor plan and in the table picker is filled Signal red with a cross or strike-through, so guests see at a glance it can't be picked |
 | Nav pill | `#ffffff` on ink | Active tab only |
 
 Buttons: white fill + black Angie (primary), ink fill + white hairline (secondary). Hover on primary inverts to ghost white. Do not use gold CTAs.

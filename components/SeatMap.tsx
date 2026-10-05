@@ -94,19 +94,47 @@ export default function SeatMap({
           ) : null}
           {tables.map(({ seat, point }) => {
             const taken = takenSeatIds.includes(seat.id);
-            const ring = (
+            // Taken tables get a solid red cover with a cross, so they read
+            // as closed at a glance and not just as a fainter ring.
+            const ring = taken ? (
+              <>
+                <circle
+                  cx={point[0]}
+                  cy={point[1]}
+                  r={RING + 2}
+                  fill="var(--destructive)"
+                  fillOpacity={0.85}
+                  stroke="var(--destructive)"
+                  strokeWidth={2.5}
+                />
+                <path
+                  d={`M${point[0] - 9},${point[1] - 9} L${point[0] + 9},${point[1] + 9} M${point[0] + 9},${point[1] - 9} L${point[0] - 9},${point[1] + 9}`}
+                  stroke="white"
+                  strokeOpacity={0.9}
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                />
+              </>
+            ) : (
               <circle
                 cx={point[0]}
                 cy={point[1]}
                 r={RING}
-                fill={taken ? "rgba(0,0,0,0.6)" : "rgba(0,0,0,0.01)"}
-                stroke={taken ? "rgba(255,255,255,0.25)" : "var(--gold-bright)"}
+                fill="rgba(0,0,0,0.01)"
+                stroke="var(--gold-bright)"
                 strokeOpacity={selected ? 0.35 : 0.7}
                 strokeWidth={2.5}
-                strokeDasharray={taken ? "6 6" : undefined}
               />
             );
-            if (!onSelectSeat || taken) {
+            if (onSelectSeat && taken) {
+              return (
+                <g key={seat.id} className="cursor-not-allowed">
+                  <title>{`${seat.label} is taken`}</title>
+                  {ring}
+                </g>
+              );
+            }
+            if (!onSelectSeat) {
               return (
                 <g key={seat.id} className="pointer-events-none">
                   {ring}

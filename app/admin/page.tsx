@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { requireAdmin } from "@/lib/admin-auth";
 import { listMidtransDigests } from "@/lib/midtrans/log";
-import { listReservations, type ReservationRecord } from "@/lib/reservations";
+import { isManualBooking, listReservations, type ReservationRecord } from "@/lib/reservations";
 import { getSeat } from "@/lib/seats";
 import { getNight, getTablePackage } from "@/lib/tables";
 import { waMeUrl } from "@/lib/wa-me";
@@ -35,7 +35,8 @@ function describe(reservation: ReservationRecord) {
 
 function whatsappText(reservation: ReservationRecord) {
   const { table, area, nightLong } = describe(reservation);
-  return `Hi ${reservation.name}, this is Carnaval of Screams about your table reservation (${table ?? area}, ${nightLong}). Booking code: ${reservation.orderId}.`;
+  const greeting = reservation.name ? `Hi ${reservation.name}` : "Hi";
+  return `${greeting}, this is Carnaval of Screams about your table reservation (${table ?? area}, ${nightLong}). Booking code: ${reservation.orderId}.`;
 }
 
 export default async function AdminPage() {
@@ -46,13 +47,16 @@ export default async function AdminPage() {
   const [all, digests] = await Promise.all([listReservations(), listMidtransDigests()]);
   const rows: AdminReservation[] = all.map((reservation) => {
     const { table, area, night } = describe(reservation);
+    const manual = isManualBooking(reservation);
     return {
       orderId: reservation.orderId,
       name: reservation.name,
       email: reservation.email,
       phone: reservation.phone,
       nik: reservation.nik,
-      status: reservation.status,
+      // Booked by hand is its own status here: it holds the table like a
+      // paid booking but no money changed hands through the site.
+      status: manual ? "manual" : reservation.status,
       amountIdr: reservation.amountIdr,
       payment: paymentTypeLabel(reservation.channelId),
       nightId: reservation.nightId,
@@ -61,9 +65,9 @@ export default async function AdminPage() {
       night,
       expiresAt: reservation.expiresAt,
       createdAt: reservation.createdAt,
-      whatsappUrl: waMeUrl(reservation.phone, whatsappText(reservation)),
+      whatsappUrl: reservation.phone ? waMeUrl(reservation.phone, whatsappText(reservation)) : null,
       test: isTest(reservation),
-      midtrans: digests.get(reservation.orderId) ?? null,
+      midtrans: manual ? null : (digests.get(reservation.orderId) ?? null),
     };
   });
 

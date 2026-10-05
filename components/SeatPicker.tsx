@@ -79,7 +79,7 @@ export default function SeatPicker({
               }}
               className={`min-w-12 border px-2 py-2 font-heading text-[11px] tracking-[0.12em] transition-colors ${
                 taken
-                  ? "cursor-not-allowed border-white/10 bg-black/20 text-white/30 line-through"
+                  ? "cursor-not-allowed border-destructive bg-destructive/85 text-white line-through decoration-white/70"
                   : selected
                     ? "border-white bg-white text-black"
                     : "border-white/15 bg-black/30 text-white hover:border-white/50"
@@ -101,8 +101,8 @@ export default function SeatPicker({
         </p>
       ) : (
         <p className="mt-6 text-sm text-white/45">
-          Only tables in your paid area can be chosen. Greyed-out numbers are
-          already taken.
+          Only tables in your paid area can be chosen. Red numbers are already
+          taken.
         </p>
       )}
 
