@@ -3,12 +3,11 @@ import { PASSES } from "@/lib/tickets";
 
 export default function Tickets() {
   return (
-    <section
-      id="tickets"
-      className="relative isolate scroll-mt-28 overflow-hidden bg-ink px-6 pb-28 pt-24 sm:pb-36 sm:pt-0"
-    >
-
-      <div className="relative mx-auto w-full max-w-6xl text-center">
+    <section className="relative isolate overflow-hidden bg-ink px-6 pb-28 pt-24 sm:pb-36 sm:pt-0">
+      <div
+        id="tickets"
+        className="relative mx-auto w-full max-w-6xl text-center"
+      >
         <p className="font-heading text-[11px] tracking-[0.42em] text-white/55 sm:text-xs">
           Carnaval of Screams
         </p>
