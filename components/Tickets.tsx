@@ -29,7 +29,7 @@ export default function Tickets() {
             <article
               id={pass.id}
               key={pass.id}
-              className={`pass-panel scroll-mt-28 flex flex-col px-6 py-7 sm:px-7 ${
+              className={`pass-panel flex flex-col px-6 py-7 sm:px-7 ${
                 pass.status === "sold-out" ? "pass-panel-dim" : ""
               }`}
             >

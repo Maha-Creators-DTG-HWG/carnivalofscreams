@@ -134,9 +134,21 @@ export default function SiteHeader() {
               href={link.href}
               className="t-tab font-heading flex items-center text-center text-[11px] md:text-sm"
               aria-current={current ? "page" : undefined}
-              onClick={() => {
+              onClick={(event) => {
+                const hash = link.href.split("#")[1] ?? null;
                 lockUntil.current = Date.now() + 900;
-                setSection(link.href.split("#")[1] ?? null);
+                setSection(hash);
+
+                // Next skips the scroll when the hash is already in the URL,
+                // so handle same-page links ourselves.
+                if (pathname !== "/" || (!hash && link.href !== "/")) return;
+                event.preventDefault();
+                if (hash) {
+                  document.getElementById(hash)?.scrollIntoView({ block: "start" });
+                } else {
+                  window.scrollTo({ top: 0 });
+                }
+                window.history.replaceState(null, "", link.href);
               }}
             >
               {link.label}

@@ -5,10 +5,12 @@ import { LINEUP } from "@/lib/lineup";
 export default function GuestStars() {
   return (
     <section
-      id="guest-stars"
-      className="relative isolate scroll-mt-28 overflow-hidden bg-ink px-6 pb-24 pt-24 sm:pb-28 sm:pt-32"
+      className="relative isolate overflow-hidden bg-ink px-6 pb-24 pt-24 sm:pb-28 sm:pt-32"
     >
-      <div className="relative mx-auto w-full max-w-6xl text-center">
+      <div
+        id="guest-stars"
+        className="relative mx-auto w-full max-w-6xl text-center"
+      >
         <p className="font-heading text-[11px] tracking-[0.42em] text-white/55 sm:text-xs">
           Guest Stars
         </p>
