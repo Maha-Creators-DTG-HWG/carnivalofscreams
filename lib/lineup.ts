@@ -11,6 +11,33 @@ export const LINEUP = [
     alt: "Basboi arriving on Day 1 of Carnaval of Screams: The Arrival",
   },
   {
+    id: "raka",
+    nightId: "oct-30" as const,
+    day: "Day 1",
+    name: "Raka",
+    date: "30th October 2026",
+    image: "/images/guest-raka.webp",
+    alt: "Raka arriving on Day 1 of Carnaval of Screams: The Arrival",
+  },
+  {
+    id: "quest",
+    nightId: "oct-30" as const,
+    day: "Day 1",
+    name: "Quest",
+    date: "30th October 2026",
+    image: "/images/guest-quest.webp",
+    alt: "Quest arriving on Day 1 of Carnaval of Screams: The Arrival",
+  },
+  {
+    id: "muria",
+    nightId: "oct-30" as const,
+    day: "Day 1",
+    name: "Muria",
+    date: "30th October 2026",
+    image: "/images/guest-muria.webp",
+    alt: "Muria arriving on Day 1 of Carnaval of Screams: The Arrival",
+  },
+  {
     id: "pemandu-karaoke-sedih",
     nightId: "oct-31" as const,
     day: "Day 2",
@@ -22,5 +49,5 @@ export const LINEUP = [
 ] as const;
 
 export function getLineup(nightId: NightId) {
-  return LINEUP.find((guest) => guest.nightId === nightId);
+  return LINEUP.filter((guest) => guest.nightId === nightId);
 }

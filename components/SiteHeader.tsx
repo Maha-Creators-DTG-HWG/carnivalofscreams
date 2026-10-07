@@ -8,6 +8,7 @@ import { ACTIVE_PASS } from "@/lib/tickets";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
+  { label: "Lineup", href: "/#guest-stars" },
   { label: "Ticket", href: `/#${ACTIVE_PASS.id}` },
   { label: "About", href: "/about" },
   // { label: "Gallery", href: "/gallery" },

@@ -19,28 +19,27 @@ export default function GuestStars() {
           Two nights full of surprises.
         </p>
 
-        <ul className="mt-16 grid list-none gap-8 p-0 sm:grid-cols-2 sm:gap-6 lg:gap-8">
+        <ul className="mt-12 grid list-none grid-cols-2 gap-x-4 gap-y-8 p-0 sm:grid-cols-3 lg:grid-cols-5">
           {LINEUP.map((guest) => (
-            <li key={guest.id} className="group text-left">
-              <figure className="overflow-hidden border border-white/12 bg-ink-soft transition-[border-color,transform] duration-300 group-hover:-translate-y-1 group-hover:border-white/35">
+            <li key={guest.id} className="group min-w-0 text-left">
+              <figure className="relative aspect-[3/4] overflow-hidden border border-white/12 bg-[radial-gradient(ellipse_at_50%_65%,#252044_0%,#0d0714_65%)] transition-[border-color,transform] duration-300 motion-safe:group-hover:-translate-y-1 group-hover:border-white/35">
                 <Image
                   src={guest.image}
                   alt={guest.alt}
-                  width={576}
-                  height={1024}
-                  sizes="(min-width: 640px) 40vw, 90vw"
-                  className="h-auto w-full"
+                  fill
+                  sizes="(min-width: 1200px) 218px, (min-width: 1024px) 18vw, (min-width: 640px) 30vw, 44vw"
+                  className="object-contain object-bottom px-2 pt-3"
                 />
               </figure>
-              <div className="mt-5 px-1">
-                <p className="font-heading text-[11px] tracking-[0.32em] text-white/50">
+              <div className="mt-4 px-1">
+                <p className="font-heading text-[9px] leading-relaxed tracking-[0.12em] text-white/50">
                   {guest.day}
-                  <span className="mx-3 text-white/25" aria-hidden="true">
+                  <span className="mx-1 text-white/25" aria-hidden="true">
                     ·
                   </span>
                   {guest.date}
                 </p>
-                <h3 className="mt-3 font-heading text-2xl tracking-[0.08em] text-white sm:text-[1.7rem]">
+                <h3 className="mt-2 font-heading text-base leading-snug tracking-[0.06em] text-white">
                   {guest.name}
                 </h3>
               </div>
