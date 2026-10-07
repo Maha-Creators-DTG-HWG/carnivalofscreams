@@ -9,7 +9,7 @@ export default function GuestStars() {
     >
       <div
         id="guest-stars"
-        className="relative mx-auto w-full max-w-6xl text-center"
+        className="relative mx-auto min-h-[calc(100svh-6.5rem)] w-full max-w-6xl text-center"
       >
         <p className="font-heading text-[11px] tracking-[0.42em] text-white/55 sm:text-xs">
           Guest Stars
@@ -48,6 +48,14 @@ export default function GuestStars() {
             </li>
           ))}
         </ul>
+
+        <div className="mt-14 flex items-center justify-center gap-6">
+          <span className="hidden h-px w-16 bg-white/20 sm:block" aria-hidden="true" />
+          <p className="font-heading text-xs tracking-[0.32em] text-white/70 sm:text-base">
+            And many more to be announced
+          </p>
+          <span className="hidden h-px w-16 bg-white/20 sm:block" aria-hidden="true" />
+        </div>
       </div>
     </section>
   );
