@@ -20,9 +20,9 @@
   --tabs-dur: 250ms;
   --tabs-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --tabs-text-muted: rgba(205, 191, 224, 0.75);
-  --tabs-text-active: #050308;
+  --tabs-text-active: #e8f6ff;
   --tabs-bar-bg: rgba(5, 3, 8, 0.72);
-  --tabs-pill-bg: #ffffff;
+  --tabs-pill-bg: radial-gradient(ellipse at 50% 100%, rgba(110, 190, 255, 0.34), rgba(110, 190, 255, 0.1) 70%);
 
   /* shadcn tokens, mapped to the Arrival palette (see design.md). The site is
      dark only, so there is no light set. */
@@ -205,6 +205,7 @@ h6 {
 
 .t-tab[aria-current="page"] {
   color: var(--tabs-text-active);
+  text-shadow: 0 0 10px rgba(120, 200, 255, 0.9);
 }
 
 .t-tabs-pill {
@@ -215,6 +216,9 @@ h6 {
   width: 0;
   background: var(--tabs-pill-bg);
   border-radius: 48px;
+  box-shadow:
+    inset 0 0 0 1px rgba(150, 210, 255, 0.6),
+    0 0 18px rgba(110, 190, 255, 0.55);
   transform: translateX(0);
   transition:
     transform var(--tabs-dur) var(--tabs-ease),

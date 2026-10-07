@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useLayoutEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { ACTIVE_PASS } from "@/lib/tickets";
 
@@ -15,9 +15,17 @@ const NAV_LINKS = [
   // { label: "Reservation", href: "/reserve" },
 ] as const;
 
-function isActive(pathname: string, href: string) {
-  if (href.includes("#")) return false;
-  if (href === "/") return pathname === "/" || pathname.startsWith("/dev");
+const SECTION_IDS = NAV_LINKS.flatMap((link) => {
+  const id = link.href.split("#")[1];
+  return id ? [id] : [];
+});
+
+function isActive(pathname: string, href: string, section: string | null) {
+  const hash = href.split("#")[1];
+  if (hash) return pathname === "/" && section === hash;
+  if (href === "/") {
+    return (pathname === "/" && section === null) || pathname.startsWith("/dev");
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -25,6 +33,9 @@ export default function SiteHeader() {
   const pathname = usePathname();
   const barRef = useRef<HTMLDivElement>(null);
   const pillRef = useRef<HTMLSpanElement>(null);
+  const mounted = useRef(false);
+  const lockUntil = useRef(0);
+  const [section, setSection] = useState<string | null>(null);
 
   const moveTo = useCallback((tab: HTMLElement, animate: boolean) => {
     const pill = pillRef.current;
@@ -67,8 +78,29 @@ export default function SiteHeader() {
     [moveTo, scrollTabIntoView],
   );
 
+  useEffect(() => {
+    if (pathname !== "/") return;
+
+    const update = () => {
+      if (Date.now() < lockUntil.current) return;
+      let current: string | null = null;
+      for (const id of SECTION_IDS) {
+        const el = document.getElementById(id)?.closest("section");
+        if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.45) {
+          current = id;
+        }
+      }
+      setSection(current);
+    };
+
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, [pathname]);
+
   useLayoutEffect(() => {
-    moveToActive(false);
+    moveToActive(mounted.current);
+    mounted.current = true;
 
     const bar = barRef.current;
     if (!bar) return;
@@ -83,25 +115,29 @@ export default function SiteHeader() {
       observer.disconnect();
       window.removeEventListener("resize", onResize);
     };
-  }, [moveToActive, pathname]);
+  }, [moveToActive, pathname, section]);
 
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-100 flex justify-center pt-8">
       <div
         ref={barRef}
-        className="t-tabs pointer-events-auto border border-white/30 shadow-[0px_2px_48px_0px_rgba(217,169,79,0.25)]"
+        className="t-tabs pointer-events-auto border border-white/30 shadow-[0px_2px_48px_0px_rgba(110,190,255,0.22)]"
         role="navigation"
         aria-label="Site"
       >
         <span ref={pillRef} className="t-tabs-pill" aria-hidden="true" />
         {NAV_LINKS.map((link) => {
-          const current = isActive(pathname, link.href);
+          const current = isActive(pathname, link.href, section);
           return (
             <Link
               key={link.label}
               href={link.href}
               className="t-tab font-heading flex items-center text-center text-[11px] md:text-sm"
               aria-current={current ? "page" : undefined}
+              onClick={() => {
+                lockUntil.current = Date.now() + 900;
+                setSection(link.href.split("#")[1] ?? null);
+              }}
             >
               {link.label}
             </Link>
