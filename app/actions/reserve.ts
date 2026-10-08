@@ -1,8 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
-
-import { insertAuditLogSafe, requestMeta } from "@/lib/audit";
+import { insertAuditLogSafe, requestMeta, requestOrigin } from "@/lib/audit";
 import { publicMessage } from "@/lib/errors";
 import { sendReservationInvoice } from "@/lib/invoice";
 import {
@@ -22,7 +20,6 @@ import {
   updateReservationCheckout,
 } from "@/lib/reservations";
 import { getSeat } from "@/lib/seats";
-import { getSiteUrl } from "@/lib/site";
 import {
   asPackageId,
   getNight,
@@ -42,15 +39,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^\+?[0-9]{9,16}$/;
 const NIK_RE = /^\d{16}$/;
 const ORDER_ID_RE = /^COS-[A-Za-z0-9._~-]{1,46}$/;
-
-async function requestOrigin() {
-  const headerList = await headers();
-  const host =
-    headerList.get("x-forwarded-host") ?? headerList.get("host");
-  const proto = headerList.get("x-forwarded-proto") ?? "http";
-  if (host) return `${proto}://${host}`;
-  return getSiteUrl();
-}
 
 function asNightId(value: unknown): NightId | undefined {
   if (value === "oct-30" || value === "oct-31") return value;

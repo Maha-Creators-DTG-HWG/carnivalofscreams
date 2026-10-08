@@ -17,6 +17,7 @@ import {
   expireReservationHoldSafe,
   markReservationPaidSafe,
 } from "@/lib/reservations";
+import { syncVipOrder, VIP_ORDER_ID_RE } from "@/lib/vip";
 
 export const runtime = "nodejs";
 
@@ -65,6 +66,13 @@ export async function POST(request: Request) {
   }
   if (!signatureValid) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 403 });
+  }
+
+  // VIP add-on orders have their own table. A thrown error answers 500, so
+  // Midtrans retries instead of us losing a paid order.
+  if (VIP_ORDER_ID_RE.test(fields.orderId)) {
+    await syncVipOrder(fields.orderId, "/api/midtrans/notification");
+    return NextResponse.json({ ok: true });
   }
 
   // The notification body only says something changed; the status API is

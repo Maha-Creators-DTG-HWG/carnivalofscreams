@@ -66,10 +66,20 @@ export function buildSnapRequest(
   };
 }
 
-export async function createSnapTransaction(
+export function createSnapTransaction(
   orderId: string,
   reservation: ReservationPayload,
   urls: { finishUrl: string; notificationUrl: string },
+): Promise<SnapTransaction> {
+  return postSnapTransaction(
+    buildSnapRequest(orderId, reservation, urls.finishUrl),
+    urls.notificationUrl,
+  );
+}
+
+export async function postSnapTransaction(
+  body: object,
+  notificationUrl: string,
 ): Promise<SnapTransaction> {
   const response = await fetch(`${snapApiBase()}/snap/v1/transactions`, {
     method: "POST",
@@ -79,9 +89,9 @@ export async function createSnapTransaction(
       Authorization: basicAuthHeader(),
       // Points notifications at this deployment, so previews work without
       // changing the dashboard's Payment Notification URL.
-      "X-Override-Notification": urls.notificationUrl,
+      "X-Override-Notification": notificationUrl,
     },
-    body: JSON.stringify(buildSnapRequest(orderId, reservation, urls.finishUrl)),
+    body: JSON.stringify(body),
     cache: "no-store",
   });
 

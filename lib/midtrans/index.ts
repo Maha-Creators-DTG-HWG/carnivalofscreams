@@ -5,7 +5,13 @@ export {
   isMidtransProduction,
 } from "./config";
 export { newOrderId, parseOrderId } from "./orders";
-export { buildSnapRequest, createSnapTransaction, splitName } from "./snap";
+export {
+  buildSnapRequest,
+  createSnapTransaction,
+  itemName,
+  postSnapTransaction,
+  splitName,
+} from "./snap";
 export {
   getTransactionStatus,
   isExpiredStatus,

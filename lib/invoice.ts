@@ -61,7 +61,7 @@ function invoiceText(fields: InvoiceFields) {
   ].join("\n");
 }
 
-async function sendInvoiceEmail(reservation: ReservationRecord, fields: InvoiceFields) {
+export async function sendEmail(to: string, subject: string, text: string) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return;
 
@@ -74,18 +74,21 @@ async function sendInvoiceEmail(reservation: ReservationRecord, fields: InvoiceF
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      from,
-      to: [reservation.email],
-      subject: `Your table hold · ${fields.bookingCode}`,
-      text: invoiceText(fields),
-    }),
+    body: JSON.stringify({ from, to: [to], subject, text }),
   });
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(body || "Could not send invoice email.");
+    throw new Error(body || "Could not send email.");
   }
+}
+
+function sendInvoiceEmail(reservation: ReservationRecord, fields: InvoiceFields) {
+  return sendEmail(
+    reservation.email,
+    `Your table hold · ${fields.bookingCode}`,
+    invoiceText(fields),
+  );
 }
 
 export async function sendReservationInvoice(

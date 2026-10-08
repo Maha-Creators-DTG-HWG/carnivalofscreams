@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 
 import { getDb } from "./db";
 import { readMidtransStatus } from "./midtrans";
+import { getSiteUrl } from "./site";
 
 export type AuditEvent = {
   event: string;
@@ -62,6 +63,15 @@ export async function requestMeta() {
     ip: clientIpFromHeaders(headerList),
     userAgent: headerList.get("user-agent"),
   };
+}
+
+/** Origin of the current request, so previews pay and notify on their own host. */
+export async function requestOrigin() {
+  const headerList = await headers();
+  const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
+  const proto = headerList.get("x-forwarded-proto") ?? "http";
+  if (host) return `${proto}://${host}`;
+  return getSiteUrl();
 }
 
 function toJson(value: unknown) {
