@@ -284,6 +284,13 @@ h6 {
   transform: scale(0.97);
 }
 
+/* Midtrans Snap's popup is a light-scheme iframe. On this dark-scheme page the
+   browser gives it an opaque backdrop, so the site vanished behind flat grey.
+   Matching the scheme keeps it see-through. */
+#snap-midtrans {
+  color-scheme: normal;
+}
+
 /* The ring that pulses around the chosen table on the floor plan. Still when
    the visitor prefers reduced motion. */
 .seat-pulse {
