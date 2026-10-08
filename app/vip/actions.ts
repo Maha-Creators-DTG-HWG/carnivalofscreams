@@ -11,6 +11,7 @@ import {
   expireVipOrder,
   getVipAllowance,
   newVipOrderId,
+  normalizeBookingCode,
   getVipPrice,
   updateVipCheckout,
 } from "@/lib/vip";
@@ -94,7 +95,7 @@ async function startPayment(code: string, quantity: number): Promise<Started> {
 }
 
 export async function buyVip(formData: FormData) {
-  const code = String(formData.get("code") ?? "").trim();
+  const code = normalizeBookingCode(String(formData.get("code") ?? ""));
   const quantity = Number.parseInt(String(formData.get("quantity") ?? ""), 10);
 
   let result: Started;

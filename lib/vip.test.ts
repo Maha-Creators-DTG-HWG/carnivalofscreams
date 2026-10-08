@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { BOOKING_CODE_RE, holdsTickets, newVipOrderId, parsePrice, VIP_ORDER_ID_RE, vipRemaining } from "./vip";
+import { BOOKING_CODE_RE, holdsTickets, newVipOrderId, normalizeBookingCode, parsePrice, VIP_ORDER_ID_RE, vipRemaining } from "./vip";
 
 test("remaining never goes negative, even when the limit is lowered below what is sold", () => {
   assert.equal(vipRemaining(3, 1), 2);
@@ -35,4 +35,14 @@ test("price input accepts Indonesian formats and rejects typos", () => {
   assert.equal(parsePrice("abc"), null);
   assert.equal(parsePrice(undefined), null);
   assert.equal(parsePrice("999999999999"), null);
+});
+
+test("booking codes survive what keyboards and copy-paste do to them", () => {
+  const code = "COS-30-LUX-ddafd19c9e";
+  assert.equal(normalizeBookingCode(code), code);
+  assert.equal(normalizeBookingCode(`  ${code}\n`), code, "spaces and newlines");
+  assert.equal(normalizeBookingCode(`${code}\u200B`), code, "zero-width space from a copy");
+  assert.equal(normalizeBookingCode("cos-30-lux-DDAFD19C9E"), code, "wrong case either way");
+  assert.equal(normalizeBookingCode("COS-30-LUX- ddafd19c9e"), code, "a space inside");
+  assert.equal(normalizeBookingCode("not a code"), "notacode", "junk stays junk and is rejected later");
 });

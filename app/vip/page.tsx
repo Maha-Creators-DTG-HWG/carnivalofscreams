@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { getSeat } from "@/lib/seats";
 import { getNight } from "@/lib/tables";
-import { getVipAllowance, getVipPrice } from "@/lib/vip";
+import { getVipAllowance, getVipPrice, normalizeBookingCode } from "@/lib/vip";
 
 import VipView, { type VipAllowanceView } from "./VipView";
 
@@ -21,7 +21,7 @@ export default async function VipPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const code = first(params.code).trim();
+  const code = normalizeBookingCode(first(params.code));
   let error = first(params.error) || undefined;
 
   let allowance: VipAllowanceView | null = null;

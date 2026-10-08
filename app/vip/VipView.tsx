@@ -107,7 +107,7 @@ export default function VipView({
                   </select>
                 </label>
                 <button type="submit" className={`${button} self-center`}>
-                  Pay with Midtrans
+                  Pay
                 </button>
               </form>
             )}
@@ -122,6 +122,8 @@ export default function VipView({
               defaultValue={code}
               placeholder="COS-30-LUX-…"
               autoComplete="off"
+              autoCapitalize="none"
+              autoCorrect="off"
               spellCheck={false}
               required
               className={field}
