@@ -106,6 +106,37 @@ export default function ReserveWorkspace({ enabled, snapJsUrl, clientKey }: Prop
               onPreviewChange={onPreviewChange}
             />
           </div>
+
+          <div className="pass-panel mt-4 p-5 sm:p-6">
+            <p className="font-heading text-[11px] tracking-[0.32em] text-white/50">
+              VIP tickets
+            </p>
+            <p className="mt-3 text-sm leading-relaxed text-white/65">
+              Already have a table? Add VIP tickets with your booking code.
+            </p>
+            <form action="/vip" method="get" className="mt-4 flex gap-2">
+              <label htmlFor="vip-code" className="sr-only">
+                Booking code
+              </label>
+              <input
+                id="vip-code"
+                name="code"
+                required
+                placeholder="COS-30-LUX-…"
+                autoComplete="off"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                className="min-w-0 flex-1 border border-white/15 bg-black/40 px-4 py-3 text-white outline-none transition-colors focus:border-white/70"
+              />
+              <button
+                type="submit"
+                className="btn-press shrink-0 border border-white/20 bg-transparent px-5 py-3 font-heading text-[11px] tracking-[0.28em] text-white/70 transition-colors duration-200 hover:border-white/50 hover:text-white"
+              >
+                Continue
+              </button>
+            </form>
+          </div>
         </aside>
       </div>
     </div>
