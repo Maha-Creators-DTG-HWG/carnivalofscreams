@@ -16,6 +16,8 @@ type Props = {
   clientKey: string;
 };
 
+const TAKEN_POLL_MS = 5_000;
+
 export default function ReserveWorkspace({ enabled, snapJsUrl, clientKey }: Props) {
   const [preview, setPreview] = useState<ReservePreview>({
     step: "night",
@@ -35,13 +37,21 @@ export default function ReserveWorkspace({ enabled, snapJsUrl, clientKey }: Prop
     setPreview(next);
   }, []);
 
+  // Tables taken (or switched off in admin) while a guest is browsing show up
+  // within TAKEN_POLL_MS. Seat ids only, nothing private.
   useEffect(() => {
     let cancelled = false;
-    void listTakenSeatIdsAction(preview.nightId).then((ids) => {
-      if (!cancelled) setTakenSeatIds(ids);
-    });
+    const load = () =>
+      void listTakenSeatIdsAction(preview.nightId).then((ids) => {
+        if (!cancelled) setTakenSeatIds(ids);
+      });
+    load();
+    const id = setInterval(() => {
+      if (!document.hidden) load();
+    }, TAKEN_POLL_MS);
     return () => {
       cancelled = true;
+      clearInterval(id);
     };
   }, [preview.nightId, preview.step]);
 

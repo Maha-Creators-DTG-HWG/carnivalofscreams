@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "cn";
-import { useSearchParams } from "next/navigation";
-import { useMemo, useOptimistic, useRef, useState, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useOptimistic, useRef, useState, useTransition } from "react";
 
 import { getSeat, SEATS, type VenueSeat } from "@/lib/seats";
 import type { GuestDetails } from "@/lib/reservations";
@@ -58,14 +58,27 @@ function optimisticManualBooking(
 
 const LEGEND: StateId[] = ["open", "manual", "paid", "pending"];
 
+// ponytail: polling, not Supabase Realtime. Realtime would need a read policy on
+// reservations (phone, email, NIK) for every signed-in user. Switch if 5s feels slow.
+const LIVE_MS = 5_000;
+
 type BookingChange = { seatId: string; booking: TableBooking | null };
 
 export default function TablesView({ bookings }: { bookings: TableBooking[] }) {
+  const router = useRouter();
   const params = useSearchParams();
   const nightId = NIGHTS.find((night) => night.id === params.get("night"))?.id ?? NIGHTS[0].id;
   const night = NIGHTS.find((value) => value.id === nightId)!;
   const [selected, setSelected] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  // Guests book while this page is open; pull their tables in as they happen.
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!document.hidden) router.refresh();
+    }, LIVE_MS);
+    return () => clearInterval(id);
+  }, [router]);
 
   const bySeat = useMemo(() => {
     const map = new Map<string, TableBooking>();
