@@ -15,7 +15,7 @@ export default async function SetPasswordPage() {
   if (!data?.claims) redirect("/auth/login?error=link");
 
   return (
-    <main className="admin-surface dark relative isolate flex flex-1 items-center justify-center bg-ink px-4 py-16">
+    <main id="main" className="admin-surface dark relative isolate flex flex-1 items-center justify-center bg-ink px-4 py-16">
       <div
         aria-hidden="true"
         className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,rgba(70,100,150,0.18),transparent_60%)]"

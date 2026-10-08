@@ -284,6 +284,30 @@ h6 {
   transform: scale(0.97);
 }
 
+/* The ring that pulses around the chosen table on the floor plan. Still when
+   the visitor prefers reduced motion. */
+.seat-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .seat-pulse {
+    animation: seat-pulse 1.6s ease-out infinite;
+  }
+}
+
+@keyframes seat-pulse {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(1.67);
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .starfield {
     animation: none;

@@ -77,7 +77,10 @@ export default function ReserveWorkspace({ enabled, snapJsUrl, clientKey }: Prop
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
         {/* Sticky only in the two-column layout; in one column it would
             pin over the form. */}
-        <section className="min-w-0 flex-1 lg:order-last lg:sticky lg:top-28 lg:self-start">
+        <section
+          aria-label="Venue floor plan"
+          className="min-w-0 flex-1 lg:order-last lg:sticky lg:top-28 lg:self-start"
+        >
           <SeatMap
             highlightAreaId={preview.packageId}
             highlightLabel={selectedArea?.name}
@@ -85,11 +88,19 @@ export default function ReserveWorkspace({ enabled, snapJsUrl, clientKey }: Prop
             takenSeatIds={takenSeatIds}
             onSelectSeat={preview.step === "table" ? setSeatId : undefined}
           />
-          <p className="mt-3 text-sm text-white/45">
+          <p className="mt-3 text-sm text-white/55">
             {selectedArea
               ? selectedSeat
                 ? `${selectedSeat.label} is marked on the plan.`
-                : `${selectedArea.name} is lit up on the plan. Tap a table on the map or use the list.`
+                : (
+                    <>
+                      {selectedArea.name} is lit up on the plan.{" "}
+                      <span className="md:hidden">Pick a table from the list.</span>
+                      <span className="max-md:hidden">
+                        Tap a table on the map or use the list.
+                      </span>
+                    </>
+                  )
               : "Floor plan of the venue. Choose your area in the form and it lights up here."}
           </p>
         </section>
@@ -108,9 +119,9 @@ export default function ReserveWorkspace({ enabled, snapJsUrl, clientKey }: Prop
           </div>
 
           <div className="pass-panel mt-4 p-5 sm:p-6">
-            <p className="font-heading text-[11px] tracking-[0.32em] text-white/50">
+            <h2 className="font-heading text-[11px] tracking-[0.32em] text-white/50">
               VIP tickets
-            </p>
+            </h2>
             <p className="mt-3 text-sm leading-relaxed text-white/65">
               Already have a table? Add VIP tickets with your booking code.
             </p>
@@ -127,13 +138,13 @@ export default function ReserveWorkspace({ enabled, snapJsUrl, clientKey }: Prop
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck={false}
-                className="min-w-0 flex-1 border border-white/15 bg-black/40 px-4 py-3 text-white outline-none transition-colors focus:border-white/70"
+                className="min-w-0 flex-1 border border-white/15 bg-black/40 px-4 py-3 text-white outline-none transition-colors focus:border-white/70 focus-visible:ring-2 focus-visible:ring-white/50"
               />
               <button
                 type="submit"
                 className="btn-press shrink-0 border border-white/20 bg-transparent px-5 py-3 font-heading text-[11px] tracking-[0.28em] text-white/70 transition-colors duration-200 hover:border-white/50 hover:text-white"
               >
-                Continue
+                Find booking
               </button>
             </form>
           </div>

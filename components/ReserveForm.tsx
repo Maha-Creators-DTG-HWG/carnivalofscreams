@@ -260,16 +260,20 @@ export default function ReserveForm({
       ) : null}
 
       <form onSubmit={onSubmit} className="flex flex-col gap-6">
+        <p className="sr-only" aria-live="polite">
+          Step {stepIndex + 1} of {STEPS.length}: {STEP_LABELS[stepIndex]}
+        </p>
         <ol className="grid grid-cols-5 gap-1 text-center">
           {STEPS.map((item, index) => (
             <li
               key={item}
-              className={`font-heading text-[9px] tracking-[0.18em] sm:text-[10px] ${
+              aria-current={index === stepIndex ? "step" : undefined}
+              className={`font-heading text-[10px] tracking-[0.18em] ${
                 index === stepIndex
                   ? "text-white"
                   : index < stepIndex
-                    ? "text-white/55"
-                    : "text-white/25"
+                    ? "text-white/65"
+                    : "text-white/55"
               }`}
             >
               {STEP_LABELS[index]}
@@ -279,9 +283,9 @@ export default function ReserveForm({
 
         {step === "night" ? (
           <div className="min-w-0">
-            <p className="font-heading text-[11px] tracking-[0.32em] text-white/50">
+            <h2 className="font-heading text-[11px] tracking-[0.32em] text-white/50">
               Choose a night
-            </p>
+            </h2>
             <div className="mt-3 flex flex-col gap-2">
               {NIGHTS.map((item) => {
                 const selected = nightId === item.id;
@@ -317,9 +321,9 @@ export default function ReserveForm({
 
         {step === "area" ? (
           <div className="min-w-0">
-            <p className="font-heading text-[11px] tracking-[0.32em] text-white/50">
+            <h2 className="font-heading text-[11px] tracking-[0.32em] text-white/50">
               Choose an area
-            </p>
+            </h2>
             <p className="mt-3 text-sm leading-relaxed text-white/65">
               Tap an area to see it lit up on the floor plan. Table numbers come
               next.
@@ -355,11 +359,11 @@ export default function ReserveForm({
                         {formatIdr(pack.priceIdr)}
                       </span>
                     </span>
-                    <span className="mt-1 block text-xs text-white/45">
-                      {pack.furniture} · {pack.seats} pax · {pack.tickets}{" "}
-                      tickets · min. {formatIdr(pack.minSpendIdr)}
+                    <span className="mt-1 block text-xs text-white/55">
+                      {pack.furniture} · {pack.seats}&nbsp;pax · {pack.tickets}&nbsp;tickets
+                      · min.&nbsp;{formatIdr(pack.minSpendIdr)}
                     </span>
-                    <span className="mt-1 block text-xs text-white/40">
+                    <span className="mt-1 block text-xs text-white/55">
                       {free === 0
                         ? "Fully booked for this night"
                         : `${free} tables open · ${pack.range}`}
@@ -377,7 +381,7 @@ export default function ReserveForm({
                 on the floor plan.
               </p>
             ) : null}
-            <p className="mt-4 text-xs text-white/40">
+            <p className="mt-4 text-xs text-white/55">
               {RESID_AREA.name} is invite-only and is not in this booking.
             </p>
           </div>
@@ -385,9 +389,9 @@ export default function ReserveForm({
 
         {step === "table" ? (
           <div className="min-w-0">
-            <p className="font-heading text-[11px] tracking-[0.32em] text-white/50">
+            <h2 className="font-heading text-[11px] tracking-[0.32em] text-white/50">
               Choose a table
-            </p>
+            </h2>
             <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
               <p className="text-sm text-white">
                 <span className="font-heading tracking-[0.16em] text-gold-bright">
@@ -405,7 +409,7 @@ export default function ReserveForm({
                   onSeatChange(null);
                   setStep("area");
                 }}
-                className="font-heading text-[10px] tracking-[0.22em] text-white/55 underline underline-offset-4 transition-colors hover:text-white"
+                className="inline-flex min-h-11 items-center px-1 font-heading text-[11px] tracking-[0.22em] text-white/65 underline underline-offset-4 transition-colors hover:text-white"
               >
                 Change area
               </button>
@@ -425,7 +429,7 @@ export default function ReserveForm({
                       onSeatChange(item.id);
                       setError(null);
                     }}
-                    className={`min-w-12 border px-2 py-2 text-center font-heading text-[11px] tracking-[0.12em] transition-colors ${
+                    className={`min-h-11 min-w-12 border px-2 py-2 text-center font-heading text-[11px] tracking-[0.12em] transition-colors ${
                       taken
                         ? "cursor-not-allowed border-destructive bg-destructive/85 text-white line-through decoration-white/70"
                         : selected
@@ -438,7 +442,7 @@ export default function ReserveForm({
                 );
               })}
             </div>
-            <p className="mt-4 text-xs text-white/40">
+            <p className="mt-4 text-xs text-white/55">
               Red numbers are already taken for{" "}
               {night?.short ?? "this night"}.
             </p>
@@ -457,7 +461,7 @@ export default function ReserveForm({
                 autoComplete="name"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                className="border border-white/15 bg-black/40 px-4 py-3 text-white outline-none transition-colors focus:border-white/70"
+                className="border border-white/15 bg-black/40 px-4 py-3 text-white outline-none transition-colors focus:border-white/70 focus-visible:ring-2 focus-visible:ring-white/50"
               />
             </label>
             <label className="flex flex-col gap-2">
@@ -469,13 +473,14 @@ export default function ReserveForm({
                 name="nik"
                 inputMode="numeric"
                 autoComplete="off"
+                spellCheck={false}
                 maxLength={16}
                 placeholder="16 digits"
                 value={nik}
                 onChange={(event) =>
                   setNik(event.target.value.replace(/\D/g, "").slice(0, 16))
                 }
-                className="border border-white/15 bg-black/40 px-4 py-3 text-white outline-none transition-colors focus:border-white/70"
+                className="border border-white/15 bg-black/40 px-4 py-3 text-white outline-none transition-colors focus:border-white/70 focus-visible:ring-2 focus-visible:ring-white/50"
               />
             </label>
             <label className="flex flex-col gap-2">
@@ -491,7 +496,7 @@ export default function ReserveForm({
                 placeholder="0812…"
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
-                className="border border-white/15 bg-black/40 px-4 py-3 text-white outline-none transition-colors focus:border-white/70"
+                className="border border-white/15 bg-black/40 px-4 py-3 text-white outline-none transition-colors focus:border-white/70 focus-visible:ring-2 focus-visible:ring-white/50"
               />
             </label>
             <label className="flex flex-col gap-2">
@@ -503,45 +508,53 @@ export default function ReserveForm({
                 type="email"
                 name="email"
                 autoComplete="email"
+                spellCheck={false}
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="border border-white/15 bg-black/40 px-4 py-3 text-white outline-none transition-colors focus:border-white/70"
+                className="border border-white/15 bg-black/40 px-4 py-3 text-white outline-none transition-colors focus:border-white/70 focus-visible:ring-2 focus-visible:ring-white/50"
               />
             </label>
           </div>
         ) : null}
 
         {step === "pay" ? (
-          <div className="space-y-3 text-sm text-white/65">
-            <p>
-              <span className="text-white/40">Name</span> {name}
-            </p>
-            <p>
-              <span className="text-white/40">NIK</span> {nik}
-            </p>
-            <p>
-              <span className="text-white/40">Phone</span> {phone}
-            </p>
-            <p>
-              <span className="text-white/40">Email</span> {email}
-            </p>
-            <p>
-              <span className="text-white/40">Day</span> {night?.day} ·{" "}
-              {night?.label}
-            </p>
-            <p>
-              <span className="text-white/40">Table</span> {seat?.short}
-              {table ? ` · ${table.name}` : ""}
-            </p>
-            <p>
-              <span className="text-white/40">Booking fee</span>{" "}
-              {table ? formatIdr(table.priceIdr) : "Not set"}
-            </p>
-            <p>
-              <span className="text-white/40">Minimum spend</span>{" "}
-              {table ? `${formatIdr(table.minSpendIdr)} at the venue` : "Not set"}
-            </p>
-          </div>
+          <dl className="space-y-3 text-sm text-white/65">
+            <div>
+              <dt className="inline text-white/55">Name</dt> <dd className="inline">{name}</dd>
+            </div>
+            <div>
+              <dt className="inline text-white/55">NIK</dt> <dd className="inline">{nik}</dd>
+            </div>
+            <div>
+              <dt className="inline text-white/55">Phone</dt> <dd className="inline">{phone}</dd>
+            </div>
+            <div>
+              <dt className="inline text-white/55">Email</dt> <dd className="inline">{email}</dd>
+            </div>
+            <div>
+              <dt className="inline text-white/55">Day</dt>{" "}
+              <dd className="inline">
+                {night?.day} · {night?.label}
+              </dd>
+            </div>
+            <div>
+              <dt className="inline text-white/55">Table</dt>{" "}
+              <dd className="inline">
+                {seat?.short}
+                {table ? ` · ${table.name}` : ""}
+              </dd>
+            </div>
+            <div>
+              <dt className="inline text-white/55">Booking fee</dt>{" "}
+              <dd className="inline">{table ? formatIdr(table.priceIdr) : "Not set"}</dd>
+            </div>
+            <div>
+              <dt className="inline text-white/55">Minimum spend</dt>{" "}
+              <dd className="inline">
+                {table ? `${formatIdr(table.minSpendIdr)} at the venue` : "Not set"}
+              </dd>
+            </div>
+          </dl>
         ) : null}
 
         {error ? (
@@ -587,13 +600,13 @@ export default function ReserveForm({
         {step === "pay" && !enabled ? (
           <p className="inline-flex items-center gap-2 text-sm text-white/55">
             <span className="pass-signal" aria-hidden="true" />
-            Midtrans is not configured yet. Add the server and client keys
-            before taking payments.
+            Online payment is not available right now. Please try again later
+            or message us on WhatsApp.
           </p>
         ) : null}
 
         {step === "pay" ? (
-          <p className="text-xs leading-relaxed text-white/40">
+          <p className="text-xs leading-relaxed text-white/55">
             Pay the booking fee within 60 minutes to keep this table. The hold
             and the payment expire together. Minimum spend is paid at the venue
             and is not included in the booking fee. Extra guests buy their own

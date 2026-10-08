@@ -10,7 +10,7 @@ export default function ReserveLayout({
   return (
     <div className="flex flex-1 flex-col bg-ink">
       <SiteHeader />
-      <main className="relative isolate flex flex-1 flex-col bg-ink">
+      <main id="main" className="relative isolate flex flex-1 flex-col bg-ink">
         <ArrivalGround />
         <div className="relative z-10 flex flex-1 flex-col">{children}</div>
       </main>

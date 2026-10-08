@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <div className="flex flex-1 flex-col bg-ink">
       <SiteHeader />
-      <main className="flex flex-1 flex-col">
+      <main id="main" className="flex flex-1 flex-col">
         <Hero />
         <GuestStars />
         <Tickets />

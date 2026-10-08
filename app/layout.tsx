@@ -16,6 +16,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#050308",
 };
 
 export const metadata: Metadata = {
@@ -32,6 +33,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${angie.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:text-black"
+        >
+          Skip to content
+        </a>
         {children}
         <WhatsAppButton />
       </body>

@@ -1,5 +1,7 @@
-import { buyVip } from "./actions";
 import { formatIdr } from "@/lib/tables";
+
+import { buyVip } from "./actions";
+import PayButton from "./PayButton";
 
 export type VipAllowanceView = {
   code: string;
@@ -20,7 +22,7 @@ const ERRORS: Record<string, string> = {
 };
 
 const field =
-  "border border-white/15 bg-black/40 px-4 py-3 text-white outline-none transition-colors focus:border-white/70";
+  "border border-white/15 bg-black/40 px-4 py-3 text-white outline-none transition-colors focus:border-white/70 focus-visible:ring-2 focus-visible:ring-white/50";
 const button =
   "btn-press inline-flex items-center justify-center border border-white/80 bg-white px-8 py-3 font-heading text-[11px] tracking-[0.28em] text-black transition-colors duration-200 hover:bg-transparent hover:text-white";
 
@@ -42,7 +44,7 @@ export default function VipView({
       <p className="font-heading text-[11px] tracking-[0.42em] text-white/55 sm:text-xs">
         For table guests
       </p>
-      <h1 className="pass-title mt-5 font-heading text-4xl tracking-[0.14em] text-white sm:text-5xl">
+      <h1 className="pass-title mt-5 font-heading text-4xl tracking-[0.14em] text-balance text-white sm:text-5xl">
         VIP tickets
       </h1>
       <p className="mx-auto mt-6 max-w-md text-sm leading-relaxed text-white/65 sm:text-base">
@@ -51,7 +53,7 @@ export default function VipView({
       </p>
 
       {message ? (
-        <p role="alert" className="mt-8 border border-gold-bright/40 bg-white/5 p-3 text-sm text-white">
+        <p id="vip-error" role="alert" className="mt-8 border border-gold-bright/40 bg-white/5 p-3 text-sm text-white">
           {message}
         </p>
       ) : null}
@@ -71,7 +73,8 @@ export default function VipView({
             ) : null}
             <dt className="text-white/50">Your limit</dt>
             <dd className="text-white">
-              {allowance.limit} · bought {allowance.sold}
+              <span className="tabular-nums">{allowance.limit}</span> · bought{" "}
+              <span className="tabular-nums">{allowance.sold}</span>
               {allowance.held ? ` · ${allowance.held} awaiting payment` : ""}
             </dd>
             {priceIdr !== null ? (
@@ -106,9 +109,7 @@ export default function VipView({
                     ))}
                   </select>
                 </label>
-                <button type="submit" className={`${button} self-center`}>
-                  Pay
-                </button>
+                <PayButton className={`${button} self-center`} />
               </form>
             )}
           </div>
@@ -122,6 +123,8 @@ export default function VipView({
               defaultValue={code}
               placeholder="COS-30-LUX-…"
               autoComplete="off"
+              aria-invalid={message ? true : undefined}
+              aria-describedby={message ? "vip-error" : undefined}
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
@@ -130,7 +133,7 @@ export default function VipView({
             />
           </label>
           <button type="submit" className={`${button} self-center`}>
-            Continue
+            Find booking
           </button>
         </form>
       )}

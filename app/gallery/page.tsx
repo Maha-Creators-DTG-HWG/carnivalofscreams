@@ -13,7 +13,7 @@ export default function GalleryPage() {
   return (
     <div className="relative flex min-h-svh flex-1 flex-col overflow-hidden bg-ink">
       <SiteHeader />
-      <main className="relative flex min-h-svh flex-1 flex-col">
+      <main id="main" className="relative flex min-h-svh flex-1 flex-col">
         <PastEventsGallery />
       </main>
     </div>

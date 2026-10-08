@@ -44,6 +44,10 @@ export default function SeatMap({
       <img
         src={VENUE_MAP.src}
         alt={VENUE_MAP.alt}
+        width={VENUE_MAP.width}
+        height={VENUE_MAP.height}
+        fetchPriority="high"
+        decoding="async"
         className="h-auto w-full"
       />
       {tables.length > 0 ? (
@@ -148,7 +152,7 @@ export default function SeatMap({
                 tabIndex={0}
                 aria-label={seat.label}
                 aria-pressed={highlightSeatId === seat.id}
-                className="cursor-pointer outline-none [&>circle]:hover:stroke-white"
+                className="group cursor-pointer outline-none max-md:pointer-events-none [&>circle]:hover:stroke-white"
                 onClick={() => onSelectSeat(seat.id)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
@@ -157,7 +161,17 @@ export default function SeatMap({
                   }
                 }}
               >
+                <circle cx={point[0]} cy={point[1]} r={RING + 14} fill="rgba(0,0,0,0.01)" />
                 {ring}
+                <circle
+                  cx={point[0]}
+                  cy={point[1]}
+                  r={RING + 10}
+                  fill="none"
+                  stroke="white"
+                  strokeWidth={4}
+                  className="hidden group-focus-visible:block"
+                />
               </g>
             );
           })}
@@ -178,20 +192,8 @@ export default function SeatMap({
                 fill="none"
                 stroke="var(--gold-bright)"
                 strokeWidth={3}
-              >
-                <animate
-                  attributeName="r"
-                  values={`${RING + 6};${RING + 26}`}
-                  dur="1.6s"
-                  repeatCount="indefinite"
-                />
-                <animate
-                  attributeName="opacity"
-                  values="0.9;0"
-                  dur="1.6s"
-                  repeatCount="indefinite"
-                />
-              </circle>
+                className="seat-pulse"
+              />
             </g>
           ) : null}
         </svg>

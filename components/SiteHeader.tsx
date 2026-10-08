@@ -29,7 +29,7 @@ function isActive(pathname: string, href: string, section: string | null) {
 
 export default function SiteHeader() {
   const pathname = usePathname();
-  const barRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLElement>(null);
   const pillRef = useRef<HTMLSpanElement>(null);
   const mounted = useRef(false);
   const lockUntil = useRef(0);
@@ -117,10 +117,9 @@ export default function SiteHeader() {
 
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-100 flex justify-center pt-8">
-      <div
+      <nav
         ref={barRef}
         className="t-tabs pointer-events-auto border border-white/30 shadow-[0px_2px_48px_0px_rgba(110,190,255,0.22)]"
-        role="navigation"
         aria-label="Site"
       >
         <span ref={pillRef} className="t-tabs-pill" aria-hidden="true" />
@@ -153,7 +152,7 @@ export default function SiteHeader() {
             </Link>
           );
         })}
-      </div>
+      </nav>
     </header>
   );
 }

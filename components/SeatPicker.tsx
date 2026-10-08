@@ -58,7 +58,7 @@ export default function SeatPicker({
           setError(null);
         }}
       />
-      <p className="mt-3 mb-8 text-sm text-white/45">
+      <p className="mt-3 mb-8 text-sm text-white/55">
         {area?.name} is lit up on the plan. Confirm your table below.
       </p>
 
@@ -77,7 +77,7 @@ export default function SeatPicker({
                 setSelectedSeatId(item.id);
                 setError(null);
               }}
-              className={`min-w-12 border px-2 py-2 font-heading text-[11px] tracking-[0.12em] transition-colors ${
+              className={`min-h-11 min-w-12 border px-2 py-2 font-heading text-[11px] tracking-[0.12em] transition-colors ${
                 taken
                   ? "cursor-not-allowed border-destructive bg-destructive/85 text-white line-through decoration-white/70"
                   : selected
@@ -100,7 +100,7 @@ export default function SeatPicker({
           {error}
         </p>
       ) : (
-        <p className="mt-6 text-sm text-white/45">
+        <p className="mt-6 text-sm text-white/55">
           Only tables in your paid area can be chosen. Red numbers are already
           taken.
         </p>

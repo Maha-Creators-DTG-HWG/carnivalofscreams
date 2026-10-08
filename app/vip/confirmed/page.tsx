@@ -4,6 +4,8 @@ import Link from "next/link";
 import { formatIdr } from "@/lib/tables";
 import { getVipOrder, syncVipOrder, VIP_ORDER_ID_RE } from "@/lib/vip";
 
+import AutoRefresh from "./AutoRefresh";
+
 export const metadata: Metadata = {
   title: "VIP tickets",
   robots: { index: false, follow: false },
@@ -45,9 +47,12 @@ export default async function VipConfirmedPage({
 
   return (
     <div className="mx-auto flex min-h-[70vh] w-full max-w-xl flex-col px-6 pb-28 pt-24 text-center sm:pt-32">
+      {order && !paid && !closed ? <AutoRefresh /> : null}
+      <div aria-live="polite">
       <p className="font-heading text-[11px] tracking-[0.42em] text-white/55 sm:text-xs">{kicker}</p>
       <h1 className="pass-title mt-5 font-heading text-4xl tracking-[0.14em] text-balance text-white sm:text-5xl">{title}</h1>
       <p className="mx-auto mt-6 max-w-md text-sm leading-relaxed text-pretty text-white/65 sm:text-base">{body}</p>
+      </div>
       {order ? (
         <dl className="pass-panel mt-10 grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 px-5 py-5 text-left text-sm sm:px-6">
           <dt className="text-white/50">VIP order</dt>
