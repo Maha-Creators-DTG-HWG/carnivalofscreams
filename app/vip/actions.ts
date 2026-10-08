@@ -88,7 +88,7 @@ async function startPayment(code: string, quantity: number): Promise<VipPayment>
     return { token: snap.token, url: snap.redirectUrl, orderId };
   } catch (error) {
     console.error("[vip] failed to start payment", error);
-    // Give the tickets back right away rather than holding them for an hour.
+    // Give the tickets back right away rather than holding them until the window closes.
     await expireVipOrder(orderId).catch(() => {});
     return { error: "payment" };
   }

@@ -1,4 +1,5 @@
 import { formatIdr } from "@/lib/tables";
+import { PAYMENT_DUE_MINUTES } from "@/lib/midtrans/types";
 
 import { VIP_BUTTON as button, VIP_ERRORS as ERRORS, VIP_FIELD as field } from "./copy";
 import VipBuyForm from "./VipBuyForm";
@@ -82,7 +83,7 @@ export default function VipView({
             ) : allowance.remaining === 0 ? (
               <p className="text-sm text-white/65">
                 {allowance.held
-                  ? "You have a payment in progress. If it does not complete, the tickets are released after an hour."
+                  ? `You have a payment in progress. If it does not complete, the tickets are released within ${PAYMENT_DUE_MINUTES} minutes.`
                   : "You have reached the VIP ticket limit for this booking."}
               </p>
             ) : (

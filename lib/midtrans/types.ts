@@ -1,7 +1,7 @@
 import type { NightId, TablePackageId } from "../tables";
 
 /** The hold and the Snap transaction expire together. */
-export const PAYMENT_DUE_MINUTES = 60;
+export const PAYMENT_DUE_MINUTES = 10;
 
 export type ReservationPayload = {
   name: string;

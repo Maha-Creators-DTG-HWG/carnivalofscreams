@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useTransition, type FormEvent } from "reac
 
 import "@/types/midtrans-snap";
 import { waitForSnap } from "@/lib/snap-client";
+import { PAYMENT_DUE_MINUTES } from "@/lib/midtrans/types";
 import { createReservation } from "@/app/actions/reserve";
 import { getSeat, seatsForPackage } from "@/lib/seats";
 import {
@@ -211,7 +212,7 @@ export default function ReserveForm({
           onClose: () => {
             logSnapCallback("onClose", {});
             setError(
-              "Payment window closed. Your table stays held for 60 minutes while you finish paying.",
+              `Payment window closed. Your table stays held for ${PAYMENT_DUE_MINUTES} minutes while you finish paying.`,
             );
           },
         });
@@ -588,7 +589,7 @@ export default function ReserveForm({
 
         {step === "pay" ? (
           <p className="text-xs leading-relaxed text-white/55">
-            Pay the booking fee within 60 minutes to keep this table. The hold
+            Pay the booking fee within {PAYMENT_DUE_MINUTES} minutes to keep this table. The hold
             and the payment expire together. Minimum spend is paid at the venue
             and is not included in the booking fee. Extra guests buy their own
             tickets. We send the invoice by email and WhatsApp.

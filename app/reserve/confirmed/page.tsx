@@ -23,6 +23,7 @@ import {
   markReservationPaidSafe,
   releaseExpiredHoldsSafe,
 } from "@/lib/reservations";
+import { PAYMENT_DUE_MINUTES } from "@/lib/midtrans";
 import { getSeat } from "@/lib/seats";
 
 export const metadata: Metadata = {
@@ -238,7 +239,7 @@ export default async function ReservationConfirmedPage({
       <StatusShell
         kicker="Awaiting payment"
         title="Finish paying to keep this table."
-        body="Complete the transfer in Midtrans. This table stays held until the 60-minute payment window closes."
+        body={`Complete the transfer in Midtrans. This table stays held until the ${PAYMENT_DUE_MINUTES}-minute payment window closes.`}
         action={{ href: "/reserve", label: "Start again" }}
       >
         {details}

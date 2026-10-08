@@ -5,6 +5,7 @@ import Script from "next/script";
 import { useRef, useState, type FormEvent } from "react";
 
 import { waitForSnap } from "@/lib/snap-client";
+import { PAYMENT_DUE_MINUTES } from "@/lib/midtrans/types";
 import { formatIdr } from "@/lib/tables";
 
 import { startVipPayment } from "./actions";
@@ -34,7 +35,7 @@ export default function VipBuyForm({
   const [quantity, setQuantity] = useState(1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // A closed popup leaves the order held for an hour; let the guest pick it up again.
+  // A closed popup leaves the order held until the payment window closes; let the guest pick it up again.
   const [unfinished, setUnfinished] = useState<Checkout | null>(null);
   // State lands a render late; the ref stops a fast double click starting two orders.
   const inFlight = useRef(false);
@@ -64,7 +65,7 @@ export default function VipBuyForm({
         onClose: () => {
           release();
           setUnfinished(checkout);
-          setError("Payment window closed. Your tickets stay held for 60 minutes while you finish paying.");
+          setError(`Payment window closed. Your tickets stay held for ${PAYMENT_DUE_MINUTES} minutes while you finish paying.`);
           router.refresh();
         },
       });
