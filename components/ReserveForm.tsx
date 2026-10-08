@@ -5,6 +5,7 @@ import Script from "next/script";
 import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 
 import "@/types/midtrans-snap";
+import { waitForSnap } from "@/lib/snap-client";
 import { createReservation } from "@/app/actions/reserve";
 import { getSeat, seatsForPackage } from "@/lib/seats";
 import {
@@ -38,26 +39,6 @@ type Props = {
 
 const STEPS: ReserveStep[] = ["night", "area", "table", "details", "pay"];
 const STEP_LABELS = ["Day", "Area", "Table", "Details", "Pay"] as const;
-
-function waitForSnap() {
-  return new Promise<NonNullable<Window["snap"]>>(
-    (resolve, reject) => {
-      const started = Date.now();
-      const tick = () => {
-        if (typeof window.snap?.pay === "function") {
-          resolve(window.snap);
-          return;
-        }
-        if (Date.now() - started > 8000) {
-          reject(new Error("Payment is still loading. Please try again."));
-          return;
-        }
-        window.setTimeout(tick, 80);
-      };
-      tick();
-    },
-  );
-}
 
 const NIK_RE = /^\d{16}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

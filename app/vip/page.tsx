@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { getMidtransClientKey, getSnapJsUrl } from "@/lib/midtrans";
 import { getSeat } from "@/lib/seats";
 import { getNight } from "@/lib/tables";
 import { getVipAllowance, getVipPrice, normalizeBookingCode } from "@/lib/vip";
@@ -51,5 +52,14 @@ export default async function VipPage({
     }
   }
 
-  return <VipView code={code} error={error} priceIdr={priceIdr} allowance={allowance} />;
+  return (
+    <VipView
+      code={code}
+      error={error}
+      priceIdr={priceIdr}
+      allowance={allowance}
+      snapJsUrl={getSnapJsUrl()}
+      clientKey={getMidtransClientKey()}
+    />
+  );
 }

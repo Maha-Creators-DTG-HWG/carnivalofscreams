@@ -1,7 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
-
 import { insertAuditLogSafe, requestMeta, requestOrigin } from "@/lib/audit";
 import { isMidtransConfigured, itemName, postSnapTransaction, splitName } from "@/lib/midtrans";
 import { PAYMENT_DUE_MINUTES } from "@/lib/midtrans/types";
@@ -16,9 +14,11 @@ import {
   updateVipCheckout,
 } from "@/lib/vip";
 
-type Started = { url: string } | { error: string };
+export type VipPayment =
+  | { token: string; url: string; orderId: string }
+  | { error: string };
 
-async function startPayment(code: string, quantity: number): Promise<Started> {
+async function startPayment(code: string, quantity: number): Promise<VipPayment> {
   const price = await getVipPrice();
   if (price === null) return { error: "closed" };
   if (!isMidtransConfigured()) return { error: "payment" };
@@ -85,7 +85,7 @@ async function startPayment(code: string, quantity: number): Promise<Started> {
       `${origin}/api/midtrans/notification`,
     );
     await updateVipCheckout(orderId, { paymentUrl: snap.redirectUrl, paymentToken: snap.token });
-    return { url: snap.redirectUrl };
+    return { token: snap.token, url: snap.redirectUrl, orderId };
   } catch (error) {
     console.error("[vip] failed to start payment", error);
     // Give the tickets back right away rather than holding them for an hour.
@@ -94,18 +94,14 @@ async function startPayment(code: string, quantity: number): Promise<Started> {
   }
 }
 
-export async function buyVip(formData: FormData) {
-  const code = normalizeBookingCode(String(formData.get("code") ?? ""));
-  const quantity = Number.parseInt(String(formData.get("quantity") ?? ""), 10);
-
-  let result: Started;
+/** Creates the order and returns the Snap token; the page opens the popup. */
+export async function startVipPayment(rawCode: unknown, rawQuantity: unknown): Promise<VipPayment> {
+  const code = normalizeBookingCode(String(rawCode ?? ""));
+  const quantity = Number(rawQuantity);
   try {
-    result = await startPayment(code, quantity);
+    return await startPayment(code, quantity);
   } catch (error) {
     console.error("[vip] purchase failed", error);
-    result = { error: "payment" };
+    return { error: "payment" };
   }
-
-  if ("error" in result) redirect(`/vip?${new URLSearchParams({ code, error: result.error })}`);
-  redirect(result.url);
 }

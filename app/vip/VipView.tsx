@@ -1,7 +1,7 @@
 import { formatIdr } from "@/lib/tables";
 
-import { buyVip } from "./actions";
-import PayButton from "./PayButton";
+import { VIP_BUTTON as button, VIP_ERRORS as ERRORS, VIP_FIELD as field } from "./copy";
+import VipBuyForm from "./VipBuyForm";
 
 export type VipAllowanceView = {
   code: string;
@@ -13,29 +13,20 @@ export type VipAllowanceView = {
   remaining: number;
 };
 
-const ERRORS: Record<string, string> = {
-  code: "We could not find that booking code. Use the booking code from your table invoice.",
-  closed: "VIP tickets are not on sale yet. Please check back soon.",
-  quantity: "Choose how many VIP tickets you want.",
-  limit: "That is more VIP tickets than your booking allows.",
-  payment: "We could not start the payment. Please try again.",
-};
-
-const field =
-  "border border-white/15 bg-black/40 px-4 py-3 text-white outline-none transition-colors focus:border-white/70 focus-visible:ring-2 focus-visible:ring-white/50";
-const button =
-  "btn-press inline-flex items-center justify-center border border-white/80 bg-white px-8 py-3 font-heading text-[11px] tracking-[0.28em] text-black transition-colors duration-200 hover:bg-transparent hover:text-white";
-
 export default function VipView({
   code,
   error,
   priceIdr,
   allowance,
+  snapJsUrl = "",
+  clientKey = "",
 }: {
   code: string;
   error?: string;
   priceIdr: number | null;
   allowance: VipAllowanceView | null;
+  snapJsUrl?: string;
+  clientKey?: string;
 }) {
   const message = error ? (ERRORS[error] ?? ERRORS.payment) : null;
 
@@ -95,22 +86,15 @@ export default function VipView({
                   : "You have reached the VIP ticket limit for this booking."}
               </p>
             ) : (
-              <form action={buyVip} className="flex flex-col gap-4">
-                <input type="hidden" name="code" value={allowance.code} />
-                <label className="flex flex-col gap-2 text-left">
-                  <span className="font-heading text-[11px] tracking-[0.32em] text-white/50">
-                    How many VIP tickets?
-                  </span>
-                  <select name="quantity" defaultValue="1" className={field}>
-                    {Array.from({ length: allowance.remaining }, (_, index) => (
-                      <option key={index + 1} value={index + 1}>
-                        {index + 1} · {formatIdr(priceIdr * (index + 1))}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <PayButton className={`${button} self-center`} />
-              </form>
+              <VipBuyForm
+                code={allowance.code}
+                remaining={allowance.remaining}
+                priceIdr={priceIdr}
+                snapJsUrl={snapJsUrl}
+                clientKey={clientKey}
+                fieldClass={field}
+                buttonClass={button}
+              />
             )}
           </div>
         </div>
