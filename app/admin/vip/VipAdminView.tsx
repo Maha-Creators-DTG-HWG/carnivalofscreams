@@ -3,7 +3,7 @@ import { cn } from "cn";
 import { formatIdr } from "@/lib/tables";
 
 import { dateTime, Dot, PageHeader, Stat, Th } from "../ui";
-import { saveVipLimit } from "./actions";
+import { saveVipLimit, saveVipPrice } from "./actions";
 
 export type VipBookingRow = {
   code: string;
@@ -65,13 +65,53 @@ export default function VipAdminView({
         </dl>
       </PageHeader>
 
-      <p className="border-b border-white/12 py-4 text-[13px] text-white/50">
-        {priceIdr === null
-          ? "The page is closed: no price is set yet (VIP_PRICE_IDR in lib/vip.ts)."
-          : `${formatIdr(priceIdr)} per ticket.`}{" "}
-        Guests enter their booking code at <span className="text-white/70">/vip</span>. A booking with a
-        limit of 0 cannot buy yet.
-      </p>
+      <form
+        action={saveVipPrice}
+        className="flex flex-wrap items-center gap-x-3 gap-y-3 border-b border-white/12 py-4 text-[13px]"
+      >
+        <label htmlFor="vip-price" className="text-white/50">
+          Price per ticket (Rp)
+        </label>
+        <input
+          id="vip-price"
+          name="price"
+          type="number"
+          inputMode="numeric"
+          min={1000}
+          max={100000000}
+          step={1}
+          required
+          defaultValue={priceIdr ?? ""}
+          placeholder="e.g. 450000"
+          className="w-36 border border-white/15 bg-black/40 px-2 py-1.5 text-white tabular-nums outline-none focus:border-white/70"
+        />
+        <button
+          type="submit"
+          name="intent"
+          value="save"
+          className="border border-white/20 px-3 py-1.5 text-white/70 transition-colors hover:border-white/50 hover:text-white"
+        >
+          {priceIdr === null ? "Set price and open sales" : "Save price"}
+        </button>
+        {priceIdr !== null ? (
+          <button
+            type="submit"
+            name="intent"
+            value="close"
+            formNoValidate
+            className="border border-white/20 px-3 py-1.5 text-white/70 transition-colors hover:border-white/50 hover:text-white"
+          >
+            Close sales
+          </button>
+        ) : null}
+        <span className="basis-full text-white/50 sm:basis-auto">
+          {priceIdr === null
+            ? "Sales are closed until you set a price."
+            : `On sale at ${formatIdr(priceIdr)} each.`}{" "}
+          Guests enter their booking code at <span className="text-white/70">/vip</span>. A booking with a
+          limit of 0 cannot buy.
+        </span>
+      </form>
 
       <section aria-labelledby="limits" className="pt-10">
         <h2 id="limits" className="font-heading text-lg tracking-[0.14em] text-white">

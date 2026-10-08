@@ -7,8 +7,31 @@ import { getSeat } from "./seats";
 import { formatIdr, getNight, type NightId } from "./tables";
 import { sendWhatsAppMessage } from "./whatsapp";
 
-/** Price of one VIP ticket. Leave null until it is decided: the page stays closed. */
-export const VIP_PRICE_IDR: number | null = null;
+const MIN_PRICE_IDR = 1_000;
+const MAX_PRICE_IDR = 100_000_000;
+
+/** Price of one VIP ticket, set on /admin/vip. null means sales are closed. */
+export async function getVipPrice() {
+  const { data, error } = await getDb()
+    .from("vip_settings")
+    .select("price_idr")
+    .maybeSingle<{ price_idr: number | null }>();
+  if (error) throw error;
+  return data?.price_idr ?? null;
+}
+
+export async function setVipPrice(price: number | null) {
+  const { error } = await getDb()
+    .from("vip_settings")
+    .upsert({ id: true, price_idr: price, updated_at: new Date().toISOString() });
+  if (error) throw error;
+}
+
+/** "450000", "450.000" and "Rp 450,000" all mean 450000; anything implausible is null. */
+export function parsePrice(raw: unknown) {
+  const price = Number(String(raw ?? "").replace(/\D/g, ""));
+  return price >= MIN_PRICE_IDR && price <= MAX_PRICE_IDR ? price : null;
+}
 
 /** Tickets a booking may buy until an admin sets its own limit. 0 = closed until opened. */
 export const DEFAULT_VIP_LIMIT = 0;

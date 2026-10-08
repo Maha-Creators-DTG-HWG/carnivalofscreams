@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { getSeat } from "@/lib/seats";
 import { getNight } from "@/lib/tables";
-import { getVipAllowance, VIP_PRICE_IDR } from "@/lib/vip";
+import { getVipAllowance, getVipPrice } from "@/lib/vip";
 
 import VipView, { type VipAllowanceView } from "./VipView";
 
@@ -25,8 +25,10 @@ export default async function VipPage({
   let error = first(params.error) || undefined;
 
   let allowance: VipAllowanceView | null = null;
+  let priceIdr: number | null = null;
   if (code) {
     try {
+      priceIdr = await getVipPrice();
       const found = await getVipAllowance(code);
       if (found) {
         const night = getNight(found.reservation.nightId);
@@ -49,5 +51,5 @@ export default async function VipPage({
     }
   }
 
-  return <VipView code={code} error={error} priceIdr={VIP_PRICE_IDR} allowance={allowance} />;
+  return <VipView code={code} error={error} priceIdr={priceIdr} allowance={allowance} />;
 }

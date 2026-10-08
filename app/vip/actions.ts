@@ -11,14 +11,15 @@ import {
   expireVipOrder,
   getVipAllowance,
   newVipOrderId,
+  getVipPrice,
   updateVipCheckout,
-  VIP_PRICE_IDR,
 } from "@/lib/vip";
 
 type Started = { url: string } | { error: string };
 
 async function startPayment(code: string, quantity: number): Promise<Started> {
-  if (VIP_PRICE_IDR === null) return { error: "closed" };
+  const price = await getVipPrice();
+  if (price === null) return { error: "closed" };
   if (!isMidtransConfigured()) return { error: "payment" };
 
   const allowance = await getVipAllowance(code);
@@ -36,7 +37,7 @@ async function startPayment(code: string, quantity: number): Promise<Started> {
     orderId,
     code,
     quantity,
-    unitPriceIdr: VIP_PRICE_IDR,
+    unitPriceIdr: price,
     expiresAt,
   });
   if (created !== "ok") return { error: created === "over_limit" ? "limit" : "code" };
@@ -58,12 +59,12 @@ async function startPayment(code: string, quantity: number): Promise<Started> {
   try {
     const snap = await postSnapTransaction(
       {
-        transaction_details: { order_id: orderId, gross_amount: VIP_PRICE_IDR * quantity },
+        transaction_details: { order_id: orderId, gross_amount: price * quantity },
         credit_card: { secure: true },
         item_details: [
           {
             id: "vip",
-            price: VIP_PRICE_IDR,
+            price,
             quantity,
             name: itemName(`VIP ticket · ${night?.short ?? reservation.nightId}`),
           },

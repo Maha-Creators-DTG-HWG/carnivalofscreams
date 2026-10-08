@@ -5,7 +5,7 @@ import { refresh } from "next/cache";
 import { requireAdmin } from "@/lib/admin-auth";
 import { insertAuditLogSafe } from "@/lib/audit";
 import { getReservation, isManualBooking } from "@/lib/reservations";
-import { BOOKING_CODE_RE, setVipLimit } from "@/lib/vip";
+import { BOOKING_CODE_RE, parsePrice, setVipLimit, setVipPrice } from "@/lib/vip";
 
 const MAX_LIMIT = 99;
 
@@ -26,6 +26,24 @@ export async function saveVipLimit(formData: FormData) {
         payload: { admin, code, max },
       });
     }
+  }
+  refresh();
+}
+
+// "Close sales" and a price outside the sane range both leave things as they
+// were rather than guessing; the form's own min/max already catches typos.
+export async function saveVipPrice(formData: FormData) {
+  const admin = await requireAdmin("/admin/vip");
+  const close = formData.get("intent") === "close";
+  const price = close ? null : parsePrice(formData.get("price"));
+
+  if (close || price !== null) {
+    await setVipPrice(price);
+    await insertAuditLogSafe({
+      event: "admin.vip.price",
+      path: "/admin/vip",
+      payload: { admin, price },
+    });
   }
   refresh();
 }

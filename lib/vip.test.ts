@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { BOOKING_CODE_RE, holdsTickets, newVipOrderId, VIP_ORDER_ID_RE, vipRemaining } from "./vip";
+import { BOOKING_CODE_RE, holdsTickets, newVipOrderId, parsePrice, VIP_ORDER_ID_RE, vipRemaining } from "./vip";
 
 test("remaining never goes negative, even when the limit is lowered below what is sold", () => {
   assert.equal(vipRemaining(3, 1), 2);
@@ -24,4 +24,15 @@ test("VIP order ids are told apart from booking codes", () => {
   assert.ok(id.startsWith("VIP-31-"));
   assert.ok(!BOOKING_CODE_RE.test(id));
   assert.ok(BOOKING_CODE_RE.test("COS-30-LUX-ab12cd34ef"));
+});
+
+test("price input accepts Indonesian formats and rejects typos", () => {
+  assert.equal(parsePrice("450000"), 450_000);
+  assert.equal(parsePrice("450.000"), 450_000);
+  assert.equal(parsePrice("Rp 450,000"), 450_000);
+  assert.equal(parsePrice("450"), null, "450 is almost certainly 450k typed short");
+  assert.equal(parsePrice(""), null);
+  assert.equal(parsePrice("abc"), null);
+  assert.equal(parsePrice(undefined), null);
+  assert.equal(parsePrice("999999999999"), null);
 });

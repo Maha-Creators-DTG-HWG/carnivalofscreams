@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { isManualBooking, listReservations } from "@/lib/reservations";
 import { getSeat } from "@/lib/seats";
 import { getNight, NIGHTS } from "@/lib/tables";
-import { DEFAULT_VIP_LIMIT, holdsTickets, listVipLimits, listVipOrders, VIP_PRICE_IDR } from "@/lib/vip";
+import { DEFAULT_VIP_LIMIT, getVipPrice, holdsTickets, listVipLimits, listVipOrders } from "@/lib/vip";
 
 import { paymentTypeLabel } from "../ui";
 import VipAdminView, { type VipBookingRow, type VipOrderRow } from "./VipAdminView";
@@ -19,10 +19,11 @@ export const dynamic = "force-dynamic";
 export default async function VipAdminPage() {
   await requireAdmin("/admin/vip");
 
-  const [reservations, orders, limits] = await Promise.all([
+  const [reservations, orders, limits, priceIdr] = await Promise.all([
     listReservations(),
     listVipOrders(),
     listVipLimits(),
+    getVipPrice(),
   ]);
 
   const paidBookings = reservations.filter(
@@ -78,7 +79,7 @@ export default async function VipAdminPage() {
 
   return (
     <VipAdminView
-      priceIdr={VIP_PRICE_IDR}
+      priceIdr={priceIdr}
       nightTotals={nightTotals}
       bookings={bookings}
       orders={orderRows}
