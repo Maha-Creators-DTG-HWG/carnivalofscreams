@@ -19,6 +19,7 @@ export type TableBooking = {
   kind: "paid" | "pending" | "manual";
   name: string;
   phone: string;
+  nik: string;
   notes: string | null;
   email: string;
   orderId: string;
@@ -51,7 +52,7 @@ function describeTable(seat: VenueSeat, booking: TableBooking | undefined) {
 function optimisticManualBooking(
   nightId: NightId,
   seatId: string,
-  guest: GuestDetails = { name: "", phone: "", notes: null },
+  guest: GuestDetails = { name: "", phone: "", nik: "", notes: null },
 ): TableBooking {
   return { nightId, seatId, kind: "manual", ...guest, email: "", orderId: "", amountIdr: 0, expiresAt: null };
 }
@@ -333,8 +334,8 @@ function TablePanel({
       requestAnimationFrame(() => nameRef.current?.focus());
     } else {
       const removed =
-        booking && (booking.name || booking.phone || booking.notes)
-          ? { name: booking.name, phone: booking.phone, notes: booking.notes }
+        booking && (booking.name || booking.phone || booking.nik || booking.notes)
+          ? { name: booking.name, phone: booking.phone, nik: booking.nik, notes: booking.notes }
           : null;
       once(async () => {
         applyChange({ seatId: seat.id, booking: null });
@@ -365,6 +366,7 @@ function TablePanel({
         seatId: seat.id,
         name: form.get("name"),
         phone: form.get("phone"),
+        nik: form.get("nik"),
         notes: form.get("notes"),
       });
       if (result.ok) setSaved(true);
@@ -471,17 +473,28 @@ function TablePanel({
                     className={cn(INPUT, "tabular-nums")}
                   />
                 </Field>
-                <Field label="Notes">
+                <Field label="NIK">
                   <input
-                    name="notes"
-                    maxLength={200}
+                    name="nik"
+                    inputMode="numeric"
                     autoComplete="off"
-                    placeholder="Paid cash, DP 50%"
-                    defaultValue={booking?.notes ?? ""}
-                    className={INPUT}
+                    spellCheck={false}
+                    placeholder="16 digits"
+                    defaultValue={booking?.nik ?? ""}
+                    className={cn(INPUT, "tabular-nums")}
                   />
                 </Field>
               </div>
+              <Field label="Notes">
+                <input
+                  name="notes"
+                  maxLength={200}
+                  autoComplete="off"
+                  placeholder="Paid cash, DP 50%"
+                  defaultValue={booking?.notes ?? ""}
+                  className={INPUT}
+                />
+              </Field>
               <div className="flex items-center gap-3">
                 <button type="submit" disabled={pending} className={cn(BUTTON, "bg-white text-ink")}>
                   {pending ? "Saving…" : "Save guest"}

@@ -406,7 +406,8 @@ export function isManualBooking(reservation: Pick<ReservationRecord, "channelId"
   return reservation.channelId === MANUAL_CHANNEL;
 }
 
-export type GuestDetails = { name: string; phone: string; notes: string | null };
+/** nik is "" when not given; a given one has already been checked to be 16 digits. */
+export type GuestDetails = { name: string; phone: string; nik: string; notes: string | null };
 
 export type ManualBooking = GuestDetails & { nightId: NightId; seatId: string };
 
@@ -421,6 +422,7 @@ export async function insertManualBooking(entry: ManualBooking) {
     .insert({
       order_id: `MAN-${entry.nightId}-${seat.short}-${Date.now().toString(36)}`,
       name: entry.name,
+      nik: entry.nik || null,
       email: "",
       phone: entry.phone,
       night_id: entry.nightId,
@@ -445,7 +447,7 @@ export async function insertManualBooking(entry: ManualBooking) {
 export async function updateManualBooking(entry: ManualBooking) {
   const { data, error } = await getDb()
     .from("reservations")
-    .update({ name: entry.name, phone: entry.phone, notes: entry.notes })
+    .update({ name: entry.name, phone: entry.phone, nik: entry.nik || null, notes: entry.notes })
     .eq("night_id", entry.nightId)
     .eq("seat_id", entry.seatId)
     .eq("channel_id", MANUAL_CHANNEL)

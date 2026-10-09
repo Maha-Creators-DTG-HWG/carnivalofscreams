@@ -17,6 +17,7 @@ import { getNight } from "@/lib/tables";
 export type TableActionResult = { ok: true } | { ok: false; error: string };
 
 const PHONE_RE = /^\+?[0-9]{9,16}$/;
+const NIK_RE = /^\d{16}$/;
 const NAME_MAX = 80;
 const NOTES_MAX = 200;
 
@@ -28,6 +29,7 @@ function parse(raw: unknown): { ok: true; booking: ManualBooking } | { ok: false
   const seatId = String(input.seatId ?? "");
   const name = String(input.name ?? "").trim();
   const phone = String(input.phone ?? "").replace(/[\s()-]/g, "");
+  const nik = String(input.nik ?? "").replace(/\D/g, "");
   const notes = String(input.notes ?? "").trim() || null;
 
   if (!nightId || !getSeat(seatId)) return { ok: false, error: "Unknown table." };
@@ -43,7 +45,10 @@ function parse(raw: unknown): { ok: true; booking: ManualBooking } | { ok: false
       error: "Enter the WhatsApp number as digits, e.g. 081234567890, or leave it empty.",
     };
   }
-  return { ok: true, booking: { nightId, seatId, name, phone, notes } };
+  if (nik && !NIK_RE.test(nik)) {
+    return { ok: false, error: "Enter the NIK as 16 digits, or leave it empty." };
+  }
+  return { ok: true, booking: { nightId, seatId, name, phone, nik, notes } };
 }
 
 // Every table action runs the same way: admin check, parse, write, audit,

@@ -31,6 +31,7 @@ export default async function TablesPage() {
             : "pending",
         name: reservation.name,
         phone: reservation.phone,
+        nik: reservation.nik ?? "",
         notes: reservation.notes,
         email: reservation.email,
         orderId: reservation.orderId,
