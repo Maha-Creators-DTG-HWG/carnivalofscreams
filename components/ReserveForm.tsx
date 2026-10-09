@@ -40,6 +40,15 @@ type Props = {
 const STEPS: ReserveStep[] = ["night", "area", "table", "details", "pay"];
 const STEP_LABELS = ["Day", "Area", "Table", "Details", "Pay"] as const;
 
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="block">
+      <span className="block text-[11px] tracking-[0.1em] text-white/60 uppercase">{label}</span>
+      <span className="mt-0.5 block text-sm text-white">{value}</span>
+    </span>
+  );
+}
+
 const NIK_RE = /^\d{16}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^\+?[0-9]{9,16}$/;
@@ -305,11 +314,11 @@ export default function ReserveForm({
             <h2 className="font-heading text-[11px] tracking-[0.32em] text-white/50">
               Choose an area
             </h2>
-            <p className="mt-3 text-sm leading-relaxed text-white/65">
+            <p className="mt-3 text-sm leading-relaxed text-white/70">
               Tap an area to see it lit up on the floor plan. Table numbers come
               next.
             </p>
-            <div className="mt-4 flex flex-col gap-2">
+            <div className="mt-4 flex flex-col gap-3">
               {TABLE_PACKAGES.map((pack) => {
                 const free = freeSeatCount(pack.id);
                 const selected = packageId === pack.id;
@@ -324,30 +333,48 @@ export default function ReserveForm({
                       onSeatChange(null);
                       setError(null);
                     }}
-                    className={`border p-4 text-left transition-colors ${
+                    className={`block w-full border p-4 text-left transition-colors sm:p-5 ${
                       free === 0
-                        ? "cursor-not-allowed border-white/10 bg-black/20 text-white/30"
+                        ? "cursor-not-allowed border-white/10 bg-black/20 opacity-70"
                         : selected
-                          ? "border-gold-bright bg-white/10 text-white"
-                          : "border-white/15 bg-black/30 text-white hover:border-white/50"
+                          ? "border-gold-bright bg-white/10 ring-1 ring-gold-bright/60"
+                          : "border-white/15 bg-black/30 hover:border-white/50 hover:bg-white/5"
                     }`}
                   >
-                    <span className="flex items-baseline justify-between gap-3">
-                      <span className="font-heading text-sm tracking-[0.16em] text-white">
-                        {pack.name.replace(" Area", "")}
+                    <span className="flex items-start justify-between gap-4">
+                      <span className="flex items-center gap-2.5">
+                        <span
+                          aria-hidden="true"
+                          className={`size-3 shrink-0 rounded-full border ${
+                            selected ? "border-gold-bright bg-gold-bright" : "border-white/40"
+                          }`}
+                        />
+                        <span className="font-heading text-base tracking-[0.14em] text-white">
+                          {pack.name.replace(" Area", "")}
+                        </span>
                       </span>
-                      <span className="font-heading text-sm tracking-[0.12em] text-white">
-                        {formatIdr(pack.priceIdr)}
+                      <span className="text-right">
+                        <span className="block text-[11px] tracking-[0.1em] text-white/60 uppercase">
+                          Booking fee
+                        </span>
+                        <span className="mt-0.5 block font-heading text-base tracking-[0.06em] text-white tabular-nums">
+                          {formatIdr(pack.priceIdr)}
+                        </span>
                       </span>
                     </span>
-                    <span className="mt-1 block text-xs text-white/55">
-                      {pack.furniture} · {pack.seats}&nbsp;pax · {pack.tickets}&nbsp;tickets
-                      · min.&nbsp;{formatIdr(pack.minSpendIdr)}
+                    <span className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">
+                      <Fact label="Capacity" value={`${pack.capacity}\u00a0pax`} />
+                      <Fact label="Type" value={pack.furniture} />
+                      <Fact label="Min. consumption" value={formatIdr(pack.minSpendIdr)} />
+                      <Fact label="Included tickets" value={`${pack.tickets}\u00a0tickets`} />
                     </span>
-                    <span className="mt-1 block text-xs text-white/55">
-                      {free === 0
-                        ? "Fully booked for this night"
-                        : `${free} tables open · ${pack.range}`}
+                    <span className="mt-4 flex items-center justify-between gap-3 border-t border-white/10 pt-3 text-sm">
+                      <span className="text-white/70">
+                        Tables <span className="font-medium text-white">{pack.range}</span>
+                      </span>
+                      <span className={free === 0 ? "text-white/70" : "text-white/90"}>
+                        {free === 0 ? "Fully booked" : `${free}\u00a0open`}
+                      </span>
                     </span>
                   </button>
                 );
@@ -358,7 +385,7 @@ export default function ReserveForm({
                 <span className="font-heading text-[11px] tracking-[0.22em] text-gold-bright">
                   Selected
                 </span>{" "}
-                {table.name} · {table.furniture} · {table.seats} pax. Lit up
+                {table.name} · {table.furniture} · {table.capacity} pax. Lit up
                 on the floor plan.
               </p>
             ) : null}
@@ -377,7 +404,7 @@ export default function ReserveForm({
                 </span>
                 <span className="text-white/55">
                   {" "}
-                  · {table?.furniture} · {table?.seats} pax ·{" "}
+                  · {table?.furniture} · {table?.capacity} pax ·{" "}
                   {table ? formatIdr(table.priceIdr) : ""}
                 </span>
               </p>

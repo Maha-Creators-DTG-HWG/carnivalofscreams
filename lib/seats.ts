@@ -13,9 +13,10 @@ function seats(
   prefix: string,
   name: string,
   count: number,
+  first = 1,
 ): VenueSeat[] {
   return Array.from({ length: count }, (_, index) => {
-    const n = index + 1;
+    const n = first + index;
     return {
       id: `${idPrefix}-${n}`,
       packageId,
@@ -28,10 +29,11 @@ function seats(
 export const SEATS: VenueSeat[] = [
   ...seats("etius", "etius", "E", "Etius", 10),
   ...seats("luxer", "luxer", "L", "Luxer", 10),
-  ...seats("skyview", "skyview", "LS", "Luxer Sky View", 11),
+  ...seats("skyview", "skyview", "LS", "Luxer Skyview", 11),
   ...seats("tivex", "tivex", "T", "Tivex", 17),
   ...seats("perio", "perio", "P", "Perio", 3),
-  ...seats("onomy", "onomy", "O", "Onomy", 10),
+  // Only O4-O6 are for sale; the ids keep their numbers so the map still lines up.
+  ...seats("onomy", "onomy", "O", "Onomy", 3, 4),
   ...seats("vvip", "vvip", "V", "VVIP", 4),
 ];
 

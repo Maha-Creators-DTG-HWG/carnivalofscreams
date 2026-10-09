@@ -17,9 +17,9 @@ test("catalog has every COS26 table", () => {
   assert.equal(seatsForPackage("etius").length, 10);
   assert.equal(seatsForPackage("tivex").length, 17);
   assert.equal(seatsForPackage("perio").length, 3);
-  assert.equal(seatsForPackage("onomy").length, 10);
+  assert.equal(seatsForPackage("onomy").length, 3);
   assert.equal(seatsForPackage("vvip").length, 4);
-  assert.equal(SEATS.length, 65);
+  assert.equal(SEATS.length, 58);
 
   const ids = SEATS.map((seat) => seat.id);
   assert.equal(new Set(ids).size, ids.length);
@@ -33,5 +33,8 @@ test("catalog has every COS26 table", () => {
   assert.equal(getSeat("tivex-12")?.short, "T12");
   assert.equal(getSeat("tivex-17")?.short, "T17");
   assert.equal(getSeat("perio-2")?.short, "P2");
-  assert.equal(getSeat("onomy-10")?.short, "O10");
+  assert.equal(getSeat("onomy-4")?.short, "O4");
+  assert.equal(getSeat("onomy-6")?.short, "O6");
+  assert.equal(getSeat("onomy-3"), undefined, "only O4-O6 are for sale");
+  assert.equal(getSeat("onomy-7"), undefined, "only O4-O6 are for sale");
 });

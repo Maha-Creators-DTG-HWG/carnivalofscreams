@@ -381,7 +381,7 @@ function TablePanel({
             <span className="font-semibold">{seat.short}</span>
           </h2>
           <p className="mt-0.5 text-[13px] text-white/55">
-            {pack?.name} · {pack?.furniture} · {pack?.seats} seats
+            {pack?.name} · {pack?.furniture} · {pack?.capacity} seats
           </p>
         </div>
         <p className="pt-1 text-[13px] text-white">{state.label}</p>
