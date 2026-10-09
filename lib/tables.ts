@@ -27,8 +27,21 @@ export const TABLE_PACKAGES = [
     tickets: 3,
     priceIdr: 450_000,
     minSpendIdr: 6_000_000,
-    range: "L1–L27",
+    range: "L1–L10",
     blurb: "Six seats on a reserved sofa. Booking fee includes three event tickets.",
+    reservation: "1 sofa reservation",
+  },
+  {
+    id: "skyview",
+    name: "Sky View Area",
+    furniture: "Sofa",
+    tagline: "Above the crowd, with the best view of the night.",
+    seats: 6,
+    tickets: 3,
+    priceIdr: 450_000,
+    minSpendIdr: 6_000_000,
+    range: "SV1–SV11",
+    blurb: "Six seats on a reserved sofa on the second floor. Booking fee includes three event tickets.",
     reservation: "1 sofa reservation",
   },
   {
@@ -40,7 +53,7 @@ export const TABLE_PACKAGES = [
     tickets: 3,
     priceIdr: 450_000,
     minSpendIdr: 6_000_000,
-    range: "E1–E4",
+    range: "E1–E10",
     blurb: "Six seats on a reserved daybed. Booking fee includes three event tickets.",
     reservation: "1 daybed reservation",
   },
@@ -83,25 +96,32 @@ export const TABLE_PACKAGES = [
     blurb: "Four seats at a regular table. Booking fee includes two event tickets.",
     reservation: "1 regular table reservation",
   },
+  {
+    id: "vvip",
+    name: "VVIP Area",
+    furniture: "Sofa",
+    tagline: "The highest tier. The ultimate experience.",
+    seats: 6,
+    tickets: 3,
+    priceIdr: 450_000,
+    minSpendIdr: 15_000_000,
+    range: "V1–V4",
+    blurb: "Six seats on a reserved VVIP sofa. Booking fee includes three event tickets.",
+    reservation: "1 VVIP sofa reservation",
+  },
 ] as const;
-
-export const RESID_AREA = {
-  id: "resid",
-  name: "Resid Area",
-  furniture: "Highest tier",
-  tagline: "The highest tier. The ultimate experience.",
-  minSpendIdr: 15_000_000,
-} as const;
 
 export type TablePackageId = (typeof TABLE_PACKAGES)[number]["id"];
 export type TablePackage = (typeof TABLE_PACKAGES)[number];
 
 const PACKAGE_ALIASES: Record<string, TablePackageId> = {
   luxer: "luxer",
+  skyview: "skyview",
   etius: "etius",
   tivex: "tivex",
   perio: "perio",
   onomy: "onomy",
+  vvip: "vvip",
   sofa: "luxer",
   vip: "luxer",
   communal: "tivex",

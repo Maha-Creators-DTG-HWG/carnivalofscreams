@@ -5,24 +5,26 @@ import {
   asPackageId,
   formatIdr,
   getTablePackage,
-  RESID_AREA,
   TABLE_PACKAGES,
 } from "./tables";
 
 test("COS26 areas match the plotting guide", () => {
   assert.deepEqual(
     TABLE_PACKAGES.map((pack) => pack.id),
-    ["luxer", "etius", "tivex", "perio", "onomy"],
+    ["luxer", "skyview", "etius", "tivex", "perio", "onomy", "vvip"],
   );
 
   assert.equal(getTablePackage("luxer")?.priceIdr, 450_000);
   assert.equal(getTablePackage("luxer")?.minSpendIdr, 6_000_000);
   assert.equal(getTablePackage("luxer")?.seats, 6);
   assert.equal(getTablePackage("luxer")?.tickets, 3);
-  assert.equal(getTablePackage("luxer")?.range, "L1–L27");
+  assert.equal(getTablePackage("luxer")?.range, "L1–L10");
+
+  assert.equal(getTablePackage("skyview")?.priceIdr, 450_000);
+  assert.equal(getTablePackage("skyview")?.range, "SV1–SV11");
 
   assert.equal(getTablePackage("etius")?.priceIdr, 450_000);
-  assert.equal(getTablePackage("etius")?.range, "E1–E4");
+  assert.equal(getTablePackage("etius")?.range, "E1–E10");
 
   assert.equal(getTablePackage("tivex")?.priceIdr, 400_000);
   assert.equal(getTablePackage("tivex")?.minSpendIdr, 3_500_000);
@@ -37,7 +39,8 @@ test("COS26 areas match the plotting guide", () => {
   assert.equal(getTablePackage("onomy")?.minSpendIdr, 2_500_000);
   assert.equal(getTablePackage("onomy")?.range, "O1–O10");
 
-  assert.equal(RESID_AREA.minSpendIdr, 15_000_000);
+  assert.equal(getTablePackage("vvip")?.minSpendIdr, 15_000_000);
+  assert.equal(getTablePackage("vvip")?.range, "V1–V4");
   assert.match(formatIdr(450_000), /Rp\s*450\.000/);
 });
 

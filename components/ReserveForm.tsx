@@ -12,7 +12,6 @@ import { getSeat, seatsForPackage } from "@/lib/seats";
 import {
   formatIdr,
   NIGHTS,
-  RESID_AREA,
   TABLE_PACKAGES,
   type NightId,
   type TablePackageId,
@@ -363,9 +362,6 @@ export default function ReserveForm({
                 on the floor plan.
               </p>
             ) : null}
-            <p className="mt-4 text-xs text-white/55">
-              {RESID_AREA.name} is invite-only and is not in this booking.
-            </p>
           </div>
         ) : null}
 

@@ -16,7 +16,8 @@ type Props = {
   onSelectSeat?: (seatId: string) => void;
 };
 
-const RING = 24;
+// Tables sit as little as 50 plan pixels apart, so rings and tap targets stay small.
+const RING = 22;
 
 export default function SeatMap({
   className,
@@ -29,12 +30,12 @@ export default function SeatMap({
   const outline = getAreaOutline(highlightAreaId);
   const tables = highlightAreaId
     ? seatsForPackage(highlightAreaId as TablePackageId).flatMap((seat) => {
-        const point = TABLE_POINTS[seat.short];
+        const point = TABLE_POINTS[seat.id];
         return point ? [{ seat, point }] : [];
       })
     : [];
   const selected = highlightSeatId ? getSeat(highlightSeatId) : undefined;
-  const selectedPoint = selected ? TABLE_POINTS[selected.short] : undefined;
+  const selectedPoint = selected ? TABLE_POINTS[selected.id] : undefined;
 
   return (
     <div
@@ -161,7 +162,7 @@ export default function SeatMap({
                   }
                 }}
               >
-                <circle cx={point[0]} cy={point[1]} r={RING + 14} fill="rgba(0,0,0,0.01)" />
+                <circle cx={point[0]} cy={point[1]} r={RING + 3} fill="rgba(0,0,0,0.01)" />
                 {ring}
                 <circle
                   cx={point[0]}

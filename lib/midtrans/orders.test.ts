@@ -10,6 +10,8 @@ test("new COS26 order ids round-trip through parseOrderId", () => {
     ["tivex", "oct-30"],
     ["perio", "oct-31"],
     ["onomy", "oct-30"],
+    ["skyview", "oct-31"],
+    ["vvip", "oct-30"],
   ] as const) {
     const parsed = parseOrderId(newOrderId(packageId, nightId));
     assert.deepEqual(parsed, { nightId, packageId });

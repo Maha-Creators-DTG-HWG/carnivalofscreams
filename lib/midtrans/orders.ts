@@ -10,6 +10,8 @@ export function newOrderId(packageId: string, nightId: string) {
 
 const ORDER_PACKAGE_CODES: Record<string, TablePackageId> = {
   LUX: "luxer",
+  SKY: "skyview",
+  VVI: "vvip",
   ETI: "etius",
   TIV: "tivex",
   PER: "perio",

@@ -579,8 +579,8 @@ function Swatch({ state }: { state: StateId }) {
 
 // The tables sit in the middle of the venue drawing; crop to that part so the
 // labels stay legible at admin widths.
-const PLAN_VIEW = { x: 360, y: 170, width: 1140, height: 960 };
-const TABLE_RADIUS = 24;
+const PLAN_VIEW = { x: 420, y: 1060, width: 2360, height: 1600 };
+const TABLE_RADIUS = 22;
 
 function FloorPlan({
   bySeat,
@@ -605,10 +605,10 @@ function FloorPlan({
           y={PLAN_VIEW.y}
           width={PLAN_VIEW.width}
           height={PLAN_VIEW.height}
-          fill="rgba(5,3,8,0.55)"
+          fill="rgba(5,3,8,0.3)"
         />
         {SEATS.map((seat) => {
-          const point = TABLE_POINTS[seat.short];
+          const point = TABLE_POINTS[seat.id];
           if (!point) return null;
           const booking = bySeat.get(seat.id);
           const state = STATE[stateOf(booking)];
@@ -645,22 +645,11 @@ function FloorPlan({
                 cx={point[0]}
                 cy={point[1]}
                 r={TABLE_RADIUS}
-                fill={state.filled ? state.color : "rgba(5,3,8,0.7)"}
+                fill={state.filled ? state.color : "rgba(5,3,8,0.01)"}
+                fillOpacity={state.filled ? 0.5 : 1}
                 stroke={state.color}
                 strokeWidth={3}
               />
-              <text
-                x={point[0]}
-                y={point[1]}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fontSize={seat.short.length > 2 ? 17 : 20}
-                fontWeight={700}
-                fill={state.filled ? "#050308" : "white"}
-                className="pointer-events-none select-none"
-              >
-                {seat.short}
-              </text>
             </g>
           );
         })}
