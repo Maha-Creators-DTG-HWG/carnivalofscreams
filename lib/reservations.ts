@@ -1,3 +1,4 @@
+import { insertAuditLogSafe } from "./audit";
 import { getDb } from "./db";
 import { PublicError } from "./errors";
 import { getSeat } from "./seats";
@@ -281,11 +282,85 @@ export async function listTakenSeatIdsSafe(nightId: NightId) {
   }
 }
 
-export async function markReservationPaid(entry: {
+/**
+ * Midtrans took the money but the hold was already released and the seat is
+ * gone. The row keeps the seat it asked for but leaves the unique index, and
+ * the team has to refund or reseat the guest by hand.
+ */
+export const PAID_CONFLICT = "paid_conflict";
+
+type PaidEntry = {
   orderId: string;
   transactionStatus: string;
   channelId?: string | null;
-}) {
+};
+
+// A payment settled after releaseExpiredHolds flipped the row to expired.
+// Try to take the seat back; the unique index decides whether it is still free.
+async function recoverLatePayment(entry: PaidEntry) {
+  const db = getDb();
+  const paidFields = {
+    transaction_status: entry.transactionStatus,
+    channel_id: entry.channelId ?? null,
+    paid_at: nowIso(),
+  };
+
+  const reclaimed = await db
+    .from("reservations")
+    .update({ status: "paid", ...paidFields })
+    .eq("order_id", entry.orderId)
+    .eq("status", "expired")
+    .select(RESERVATION_COLUMNS)
+    .maybeSingle<ReservationRow>();
+  if (!reclaimed.error) {
+    if (reclaimed.data) {
+      await insertAuditLogSafe({
+        event: "reservation.paid_after_expiry.reclaimed",
+        orderId: entry.orderId,
+        payload: { seatId: reclaimed.data.seat_id, ...paidFields },
+      });
+      return mapReservation(reclaimed.data);
+    }
+    // Not expired: a repeat notification for a conflict we already recorded.
+    const current = await getReservation(entry.orderId);
+    return current?.status === PAID_CONFLICT ? current : null;
+  }
+  if (!isUniqueViolation(reclaimed.error)) throw reclaimed.error;
+
+  const conflict = await db
+    .from("reservations")
+    .update({ status: PAID_CONFLICT, ...paidFields })
+    .eq("order_id", entry.orderId)
+    .eq("status", "expired")
+    .select(RESERVATION_COLUMNS)
+    .maybeSingle<ReservationRow>();
+  if (conflict.error) throw conflict.error;
+  if (!conflict.data) return null;
+
+  console.error(
+    `[reservations] PAID AFTER EXPIRY, SEAT TAKEN: order ${entry.orderId} paid ` +
+      `(${entry.transactionStatus}) for ${conflict.data.night_id} seat ` +
+      `${conflict.data.seat_id} but someone else holds it. Refund or reseat the guest.`,
+  );
+  await insertAuditLogSafe({
+    event: "reservation.paid_after_expiry.conflict",
+    orderId: entry.orderId,
+    payload: {
+      seatId: conflict.data.seat_id,
+      nightId: conflict.data.night_id,
+      amountIdr: conflict.data.amount_idr,
+      ...paidFields,
+    },
+  });
+  return mapReservation(conflict.data);
+}
+
+/**
+ * Called when Midtrans says the order is paid. Returns the row with status
+ * "paid", or PAID_CONFLICT when it settled after the hold was released and the
+ * seat was taken meanwhile. Null means no such order.
+ */
+export async function markReservationPaid(entry: PaidEntry) {
   const db = getDb();
   const { data, error } = await db
     .from("reservations")
@@ -299,7 +374,7 @@ export async function markReservationPaid(entry: {
     .select(RESERVATION_COLUMNS)
     .maybeSingle<ReservationRow>();
   if (error) throw error;
-  if (!data) return null;
+  if (!data) return recoverLatePayment(entry);
 
   // Keep the first paid_at when the notification is delivered twice.
   if (!data.paid_at) {

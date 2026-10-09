@@ -115,7 +115,7 @@ export async function sendReservationInvoice(
         orderId: reservation.orderId,
         method: "POST",
         path: sourcePath,
-        payload: { to: reservation.email },
+        payload: { email: reservation.email },
       });
     } catch (error) {
       console.error("[invoice] failed to send email", error);

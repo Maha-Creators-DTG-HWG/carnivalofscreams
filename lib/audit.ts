@@ -74,8 +74,47 @@ export async function requestOrigin() {
   return getSiteUrl();
 }
 
+// Guest identifiers never go to the audit tables in the clear. The reservation
+// row already holds them for whoever needs the real values.
+function maskNik(value: string) {
+  return value.length > 4 ? "*".repeat(value.length - 4) + value.slice(-4) : "****";
+}
+
+function maskEmail(value: string) {
+  const at = value.lastIndexOf("@");
+  if (at < 1) return "***";
+  return `${value[0]}***${value.slice(at)}`;
+}
+
+function maskPhone(value: string) {
+  return value.length > 3 ? "*".repeat(value.length - 3) + value.slice(-3) : "***";
+}
+
+const MASKERS = new Map([
+  ["nik", maskNik],
+  ["email", maskEmail],
+  ["phone", maskPhone],
+]);
+
+/** Masks nik (keeps the last 4), email and phone at any depth of a JSON-like value. */
+export function redactPii(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(redactPii);
+  if (!value || typeof value !== "object") return value;
+  const out: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(value)) {
+    const mask = MASKERS.get(key.toLowerCase());
+    out[key] =
+      mask && (typeof item === "string" || typeof item === "number")
+        ? mask(String(item))
+        : redactPii(item);
+  }
+  return out;
+}
+
+// Every audit and callback row passes through here, so redaction applies to
+// all callers without each one remembering it.
 function toJson(value: unknown) {
-  return JSON.parse(JSON.stringify(value ?? {})) as unknown;
+  return redactPii(JSON.parse(JSON.stringify(value ?? {})) as unknown);
 }
 
 export async function insertAuditLog(entry: AuditEvent) {

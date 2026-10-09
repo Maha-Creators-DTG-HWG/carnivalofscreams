@@ -16,6 +16,7 @@ import {
 import {
   expireReservationHoldSafe,
   markReservationPaidSafe,
+  PAID_CONFLICT,
 } from "@/lib/reservations";
 import { syncVipOrder, VIP_ORDER_ID_RE } from "@/lib/vip";
 
@@ -88,7 +89,15 @@ export async function POST(request: Request) {
       transactionStatus: status.transactionStatus ?? "settlement",
       channelId: status.paymentType,
     });
-    await sendReservationInvoice(reservation, "/api/midtrans/notification");
+    if (!reservation) {
+      console.error(
+        `[midtrans] ${fields.orderId} is paid at Midtrans but no reservation was updated`,
+      );
+    } else if (reservation.status !== PAID_CONFLICT) {
+      // A conflict (paid after the hold lapsed, seat gone) was already logged
+      // and audited by markReservationPaid, and there is no table to invoice.
+      await sendReservationInvoice(reservation, "/api/midtrans/notification");
+    }
   } else if (isFailedStatus(status.transactionStatus)) {
     await expireReservationHoldSafe(fields.orderId, status.transactionStatus);
   }

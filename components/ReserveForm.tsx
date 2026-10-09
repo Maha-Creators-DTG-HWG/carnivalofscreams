@@ -53,6 +53,25 @@ const NIK_RE = /^\d{16}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^\+?[0-9]{9,16}$/;
 
+/** A table hold and the Snap payment that goes with it, kept so Pay can reopen it. */
+type Hold = {
+  orderId: string;
+  snapToken: string;
+  redirectUrl: string;
+  /** When the payment window (and the Snap token) ends, epoch ms. */
+  dueAt: number;
+  /** When the seat is freed for others, epoch ms. */
+  releasesAt: number;
+  seatId: string;
+  nightId: NightId;
+  /** The form values the hold was made for. */
+  key: string;
+};
+
+function clockTime(ms: number) {
+  return new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
 export default function ReserveForm({
   enabled,
   snapJsUrl,
@@ -74,6 +93,7 @@ export default function ReserveForm({
   const [error, setError] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
   const orderIdRef = useRef<string | null>(null);
+  const holdRef = useRef<Hold | null>(null);
 
   const table = packageId
     ? TABLE_PACKAGES.find((pack) => pack.id === packageId)
@@ -182,58 +202,86 @@ export default function ReserveForm({
       return;
     }
 
+    const form = { name, nik, email, phone, nightId, packageId, seatId };
+    const key = JSON.stringify(form);
+
     setError(null);
     startTransition(async () => {
-      const result = await createReservation({
-        name,
-        nik,
-        email,
-        phone,
-        nightId,
-        packageId,
-        seatId,
-      });
+      // Closing the popup leaves our own hold on the seat, so a new order for
+      // it would hit the unique index. Reopen the same payment while it lives.
+      const held = holdRef.current;
+      if (held) {
+        const now = Date.now();
+        if (now < held.dueAt && held.key === key) {
+          await openSnap(held);
+          return;
+        }
+        if (held.seatId === seatId && held.nightId === nightId && now < held.releasesAt) {
+          setError(
+            now < held.dueAt
+              ? "You changed your details after this table was held. Change them back to keep paying, or pick another table."
+              : `Your payment window ended. This table is released at ${clockTime(held.releasesAt)}; try again then.`,
+          );
+          return;
+        }
+      }
+
+      const result = await createReservation(form);
 
       if (!result.ok) {
         setError(result.error);
         return;
       }
 
-      orderIdRef.current = result.orderId;
-      const confirmedUrl = `/reserve/confirmed?order_id=${encodeURIComponent(result.orderId)}`;
-      setPaying(true);
-      try {
-        const snap = await waitForSnap();
-        snap.pay(result.snapToken, {
-          onSuccess: (payload) => {
-            logSnapCallback("onSuccess", payload);
-            router.push(confirmedUrl);
-          },
-          onPending: (payload) => {
-            logSnapCallback("onPending", payload);
-            router.push(confirmedUrl);
-          },
-          onError: (payload) => {
-            logSnapCallback("onError", payload);
-            setError("Payment failed. Please try again.");
-          },
-          onClose: () => {
-            logSnapCallback("onClose", {});
-            setError(
-              `Payment window closed. Your table stays held for ${PAYMENT_DUE_MINUTES} minutes while you finish paying.`,
-            );
-          },
-        });
-      } catch (err) {
-        logSnapCallback("load_error", {
-          message: err instanceof Error ? err.message : "unknown",
-        });
-        window.location.assign(result.redirectUrl);
-        return;
-      } finally {
-        setPaying(false);
-      }
+      const hold: Hold = {
+        orderId: result.orderId,
+        snapToken: result.snapToken,
+        redirectUrl: result.redirectUrl,
+        dueAt: result.dueAt,
+        releasesAt: result.releasesAt,
+        seatId,
+        nightId,
+        key,
+      };
+      holdRef.current = hold;
+      await openSnap(hold);
     });
+  }
+
+  async function openSnap(hold: Hold) {
+    orderIdRef.current = hold.orderId;
+    const confirmedUrl = `/reserve/confirmed?order_id=${encodeURIComponent(hold.orderId)}`;
+    setPaying(true);
+    try {
+      const snap = await waitForSnap();
+      snap.pay(hold.snapToken, {
+        onSuccess: (payload) => {
+          logSnapCallback("onSuccess", payload);
+          router.push(confirmedUrl);
+        },
+        onPending: (payload) => {
+          logSnapCallback("onPending", payload);
+          router.push(confirmedUrl);
+        },
+        onError: (payload) => {
+          logSnapCallback("onError", payload);
+          setError("Payment failed. Please try again.");
+        },
+        onClose: () => {
+          logSnapCallback("onClose", {});
+          setError(
+            `Payment window closed. Your table stays held until ${clockTime(hold.dueAt)}. Press Pay to continue.`,
+          );
+        },
+      });
+    } catch (err) {
+      logSnapCallback("load_error", {
+        message: err instanceof Error ? err.message : "unknown",
+      });
+      window.location.assign(hold.redirectUrl);
+    } finally {
+      setPaying(false);
+    }
   }
 
   const night = NIGHTS.find((item) => item.id === nightId);

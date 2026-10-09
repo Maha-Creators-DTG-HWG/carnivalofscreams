@@ -5,9 +5,9 @@ import { publicMessage } from "@/lib/errors";
 import { sendReservationInvoice } from "@/lib/invoice";
 import {
   createSnapTransaction,
+  holdWindow,
   isMidtransConfigured,
   newOrderId,
-  PAYMENT_DUE_MINUTES,
 } from "@/lib/midtrans";
 import {
   claimReservationSeat,
@@ -27,8 +27,16 @@ import {
   type NightId,
 } from "@/lib/tables";
 
+/** dueAt and releasesAt are epoch ms: see holdWindow for what each one means. */
 export type CreateReservationResult =
-  | { ok: true; snapToken: string; redirectUrl: string; orderId: string }
+  | {
+      ok: true;
+      snapToken: string;
+      redirectUrl: string;
+      orderId: string;
+      dueAt: number;
+      releasesAt: number;
+    }
   | { ok: false; error: string };
 
 export type SelectSeatResult =
@@ -43,6 +51,15 @@ const ORDER_ID_RE = /^COS-[A-Za-z0-9._~-]{1,46}$/;
 function asNightId(value: unknown): NightId | undefined {
   if (value === "oct-30" || value === "oct-31") return value;
   return undefined;
+}
+
+// Server actions take whatever the client posts, so check it is an object
+// before reading fields off it.
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+  return value as Record<string, unknown>;
 }
 
 export async function listTakenSeatIdsAction(
@@ -89,7 +106,10 @@ export async function createReservation(
     return respond({ ok: false, error: "Payment is not configured yet." });
   }
 
-  const input = raw as Record<string, unknown>;
+  const input = asRecord(raw);
+  if (!input) {
+    return respond({ ok: false, error: "Please fill in the reservation form." });
+  }
   const name = String(input.name ?? "").trim();
   const nik = String(input.nik ?? "").replace(/\D/g, "");
   const email = String(input.email ?? "").trim().toLowerCase();
@@ -138,9 +158,9 @@ export async function createReservation(
     packageId,
     seatId,
   };
-  const expiresAt = new Date(
-    Date.now() + PAYMENT_DUE_MINUTES * 60 * 1000,
-  );
+  // Snap expires at dueAt; the seat stays ours until releasesAt, so a payment
+  // that settles late still finds it held.
+  const { dueAt, releasesAt } = holdWindow();
 
   await releaseExpiredHoldsSafe();
 
@@ -150,7 +170,7 @@ export async function createReservation(
       ...reservation,
       partySize: table.seats,
       amountIdr: table.priceIdr,
-      expiresAt,
+      expiresAt: releasesAt,
     });
   } catch (error) {
     if (isUniqueViolation(error)) {
@@ -176,7 +196,7 @@ export async function createReservation(
       await updateReservationCheckout(orderId, {
         paymentUrl: snap.redirectUrl,
         paymentToken: snap.token,
-        expiresAt,
+        expiresAt: releasesAt,
       });
     } catch (error) {
       console.error("[reservations] failed to store checkout", error);
@@ -188,6 +208,8 @@ export async function createReservation(
         snapToken: snap.token,
         redirectUrl: snap.redirectUrl,
         orderId,
+        dueAt: dueAt.getTime(),
+        releasesAt: releasesAt.getTime(),
       },
       orderId,
     );
@@ -205,7 +227,8 @@ export async function selectReservationSeat(
   raw: unknown,
 ): Promise<SelectSeatResult> {
   const meta = await requestMeta();
-  const input = raw as Record<string, unknown>;
+  const input = asRecord(raw);
+  if (!input) return { ok: false, error: "Please pick a table." };
   const orderId = String(input.orderId ?? "").trim();
   const seatId = String(input.seatId ?? "").trim();
 

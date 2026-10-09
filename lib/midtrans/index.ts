@@ -24,6 +24,8 @@ export {
   verifyNotificationSignature,
 } from "./status";
 export {
+  HOLD_GRACE_SECONDS,
+  holdWindow,
   PAYMENT_DUE_MINUTES,
   type MidtransStatus,
   type ReservationPayload,

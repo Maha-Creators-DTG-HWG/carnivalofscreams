@@ -82,7 +82,8 @@ async function runTableAction(
   await insertAuditLogSafe({
     event: action.event,
     path: "/admin/tables",
-    // A deleted row lives on here, so switching a table on loses nothing.
+    // A deleted row lives on here, so switching a table on loses almost
+    // nothing: nik and phone are masked on the way in (see redactPii).
     payload: { admin, ...booking, ...(written ? { removed: written } : {}) },
   });
   refresh();

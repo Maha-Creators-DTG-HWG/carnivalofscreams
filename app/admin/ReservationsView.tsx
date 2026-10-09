@@ -36,6 +36,8 @@ const STATUSES = [
   { id: "paid", label: "Paid", tone: "paid" },
   { id: "pending", label: "Holding", tone: "pending" },
   { id: "manual", label: "By hand", tone: "manual" },
+  // Charged after the hold lapsed and the table was gone: needs a refund or a reseat.
+  { id: "paid_conflict", label: "Paid, no table", tone: "alert" },
   { id: "expired", label: "Expired", tone: "none" },
 ] as const;
 

@@ -21,6 +21,7 @@ import {
   getReservationSafe,
   listTakenSeatIdsSafe,
   markReservationPaidSafe,
+  PAID_CONFLICT,
   releaseExpiredHoldsSafe,
 } from "@/lib/reservations";
 import { PAYMENT_DUE_MINUTES } from "@/lib/midtrans";
@@ -122,7 +123,11 @@ export default async function ReservationConfirmedPage({
   const failed = isFailedStatus(transactionStatus);
   const pending = isPendingStatus(transactionStatus);
 
-  if (paid && reservation?.status !== "paid") {
+  if (
+    paid &&
+    reservation?.status !== "paid" &&
+    reservation?.status !== PAID_CONFLICT
+  ) {
     reservation =
       (await markReservationPaidSafe({
         orderId,
@@ -143,7 +148,11 @@ export default async function ReservationConfirmedPage({
     nightId: reservation?.nightId,
     packageId: reservation?.packageId,
   });
-  const seat = reservation?.seatId ? getSeat(reservation.seatId) : undefined;
+  // Paid after the hold lapsed and the table went to someone else: the seat on
+  // the row is not the guest's, so never show it as theirs.
+  const conflict = reservation?.status === PAID_CONFLICT;
+  const seat =
+    reservation?.seatId && !conflict ? getSeat(reservation.seatId) : undefined;
 
   const details = (
     <div className="pass-panel mt-10 text-left">
@@ -174,6 +183,19 @@ export default async function ReservationConfirmedPage({
       />
     </div>
   );
+
+  if (conflict) {
+    return (
+      <StatusShell
+        kicker="Payment received"
+        title="We have your payment."
+        body="Your payment arrived after the hold on your table ended, and that table has since been booked. We will contact you by WhatsApp or email to move you to another table or refund you. Keep your booking code."
+        action={{ href: "/", label: "Back home" }}
+      >
+        {details}
+      </StatusShell>
+    );
+  }
 
   if (paid && reservation && !reservation.seatId) {
     const takenSeatIds = await listTakenSeatIdsSafe(reservation.nightId);
