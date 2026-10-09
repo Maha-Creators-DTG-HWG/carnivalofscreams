@@ -27,7 +27,7 @@ test("catalog has every COS26 table", () => {
   assert.equal(new Set(shorts).size, shorts.length, "short codes are unique");
 
   assert.equal(getSeat("luxer-10")?.short, "L10");
-  assert.equal(getSeat("skyview-11")?.short, "SV11");
+  assert.equal(getSeat("skyview-11")?.short, "LS11");
   assert.equal(getSeat("vvip-4")?.short, "V4");
   assert.equal(getSeat("etius-10")?.short, "E10");
   assert.equal(getSeat("tivex-12")?.short, "T12");

@@ -3,7 +3,7 @@ import type { TablePackageId } from "./tables";
 // Plan coordinates below are in this width × height, 2× the 1500×2000 plan.
 // The image file can be any resolution at the same 3:4 ratio.
 export const VENUE_MAP = {
-  src: "/images/venue-layout-v2.webp",
+  src: "/images/venue-layout-v3.webp",
   alt: "Carnaval of Screams 2026 floor plan",
   width: 3000,
   height: 4000,
