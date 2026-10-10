@@ -38,6 +38,15 @@ export const LINEUP = [
     alt: "Muria arriving on Day 1 of Carnaval of Screams: The Arrival",
   },
   {
+    id: "safa",
+    nightId: "oct-30" as const,
+    day: "Day 1",
+    name: "Safa",
+    date: "30th October 2026",
+    image: "/images/guest-safa.webp",
+    alt: "Safa arriving on Day 1 of Carnaval of Screams: The Arrival",
+  },
+  {
     id: "pemandu-karaoke-sedih",
     nightId: "oct-31" as const,
     day: "Day 2",
