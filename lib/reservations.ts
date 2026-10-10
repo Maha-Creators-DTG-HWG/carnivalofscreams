@@ -520,6 +520,27 @@ export async function insertManualBooking(entry: ManualBooking) {
   }
 }
 
+/**
+ * The team cancels a paid online booking. The row stays (status "cancelled") but
+ * leaves the night+seat unique index, so the table is bookable online again at
+ * once. It does not refund: that is done in the Midtrans dashboard. A repeat
+ * "settlement" notification can't revive it, markReservationPaid only touches
+ * pending and paid rows.
+ */
+export async function cancelOnlineBooking(orderId: string) {
+  const { data, error } = await getDb()
+    .from("reservations")
+    .update({ status: "cancelled" })
+    .eq("order_id", orderId)
+    .eq("status", "paid")
+    .or(`channel_id.is.null,channel_id.neq.${MANUAL_CHANNEL}`)
+    .select("order_id, night_id, seat_id, amount_idr")
+    .maybeSingle<{ order_id: string; night_id: string; seat_id: string | null; amount_idr: number }>();
+  if (error) throw error;
+  if (!data) throw new PublicError("This booking is no longer paid, so there is nothing to cancel.");
+  return data;
+}
+
 export async function updateManualBooking(entry: ManualBooking) {
   const { data, error } = await getDb()
     .from("reservations")

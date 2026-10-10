@@ -10,7 +10,7 @@ import { formatIdr, getTablePackage, NIGHTS, TABLE_PACKAGES, type NightId } from
 import { TABLE_POINTS, VENUE_MAP } from "@/lib/venue-areas";
 
 import { PageHeader, Segmented, Stat, STATUS_COLOR, time } from "../ui";
-import { saveGuestDetails, switchTableOff, switchTableOn } from "./actions";
+import { cancelBooking, saveGuestDetails, switchTableOff, switchTableOn } from "./actions";
 
 export type TableBooking = {
   nightId: NightId;
@@ -353,6 +353,21 @@ function TablePanel({
     }
   }
 
+  function cancelPaid() {
+    if (!booking) return;
+    const ok = window.confirm(
+      `Cancel ${booking.orderId} and open ${seat.short} for online booking again?\n\n` +
+        `This does not refund ${formatIdr(booking.amountIdr)}. Refund it in the Midtrans dashboard.`,
+    );
+    if (!ok) return;
+    setError(null);
+    once(async () => {
+      applyChange({ seatId: seat.id, booking: null });
+      const result = await cancelBooking(booking.orderId);
+      if (!result.ok) setError(result.error);
+    });
+  }
+
   function restore() {
     if (!undo) return;
     const guest = undo;
@@ -419,8 +434,23 @@ function TablePanel({
           <p className="mt-3 text-[13px] text-white/55">
             {booking.kind === "pending"
               ? `Still paying. The hold ends${booking.expiresAt ? ` at ${time.format(booking.expiresAt)}` : ""} if payment doesn’t finish, and the table opens again.`
-              : "Booked through the website, so it can’t be switched here."}
+              : "Booked through the website, so it can’t be switched off here."}
           </p>
+          {booking.kind === "paid" ? (
+            <div className="mt-4 border-t border-white/12 pt-4">
+              <button
+                type="button"
+                disabled={pending}
+                onClick={cancelPaid}
+                className={cn(BUTTON, "border border-white/30 text-white hover:bg-white/[0.06]")}
+              >
+                {pending ? "Cancelling…" : "Cancel booking and reopen table"}
+              </button>
+              <p className="mt-2 text-[13px] text-white/55">
+                Opens the table for online booking again. Refund the guest in Midtrans.
+              </p>
+            </div>
+          ) : null}
         </div>
       ) : (
         <>

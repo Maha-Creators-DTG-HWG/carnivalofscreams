@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { insertAuditLogSafe } from "@/lib/audit";
 import { publicMessage } from "@/lib/errors";
 import {
+  cancelOnlineBooking,
   deleteManualBooking,
   insertManualBooking,
   updateManualBooking,
@@ -85,6 +86,29 @@ async function runTableAction(
     // A deleted row lives on here, so switching a table on loses almost
     // nothing: nik and phone are masked on the way in (see redactPii).
     payload: { admin, ...booking, ...(written ? { removed: written } : {}) },
+  });
+  refresh();
+  return { ok: true };
+}
+
+export async function cancelBooking(orderId: unknown): Promise<TableActionResult> {
+  const admin = await requireAdmin("/admin/tables");
+  const id = String(orderId ?? "");
+  if (!id) return { ok: false, error: "Unknown booking." };
+
+  let cancelled;
+  try {
+    cancelled = await cancelOnlineBooking(id);
+  } catch (error) {
+    console.error("[admin] cancel booking failed", error);
+    refresh();
+    return { ok: false, error: publicMessage(error, "Unable to cancel. Check your connection and try again.") };
+  }
+  await insertAuditLogSafe({
+    event: "admin.booking.cancelled",
+    orderId: id,
+    path: "/admin/tables",
+    payload: { admin, ...cancelled },
   });
   refresh();
   return { ok: true };
