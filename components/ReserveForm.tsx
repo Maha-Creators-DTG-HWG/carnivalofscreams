@@ -16,6 +16,7 @@ import {
   TABLE_PACKAGES,
   type NightId,
   type TablePackageId,
+  isWhatsAppOnly,
 } from "@/lib/tables";
 
 export type ReserveStep = "night" | "area" | "table" | "details" | "pay";
@@ -404,6 +405,45 @@ export default function ReserveForm({
               {TABLE_PACKAGES.map((pack) => {
                 const free = freeSeatCount(pack.id);
                 const selected = packageId === pack.id;
+                if (isWhatsAppOnly(pack.id)) {
+                  return (
+                    <a
+                      key={pack.id}
+                      href={`/reserve/${pack.id}?night=${nightId}`}
+                      className="block w-full border border-white/15 bg-black/30 p-4 text-left transition-colors hover:border-white/50 hover:bg-white/5 sm:p-5"
+                    >
+                      <span className="flex items-start justify-between gap-4">
+                        <span className="flex items-center gap-2.5">
+                          <span aria-hidden="true" className="size-3 shrink-0 rounded-full border border-white/40" />
+                          <span className="font-heading text-base tracking-[0.14em] text-white">
+                            {pack.name.replace(" Area", "")}
+                          </span>
+                        </span>
+                        <span className="text-right">
+                          <span className="block text-[11px] tracking-[0.1em] text-white/60 uppercase">
+                            Reserve through
+                          </span>
+                          <span className="mt-0.5 block font-heading text-base tracking-[0.06em] text-white">
+                            WhatsApp
+                          </span>
+                        </span>
+                      </span>
+                      <span className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">
+                        <Fact label="Seats" value={`${pack.capacity}\u00a0people`} />
+                        <Fact label="Type" value={pack.furniture} />
+                        <Fact label="Booking fee" value="Free" />
+                        <Fact label="Min. consumption" value={formatIdr(pack.minSpendIdr)} />
+                        <Fact label="Event tickets included" value={`${pack.tickets}\u00a0tickets`} />
+                      </span>
+                      <span className="mt-4 flex items-center justify-between gap-3 border-t border-white/10 pt-3 text-sm">
+                        <span className="text-white/70">
+                          Tables <span className="font-medium text-white">{pack.range}</span>
+                        </span>
+                        <span className="text-white/90">Chat with us →</span>
+                      </span>
+                    </a>
+                  );
+                }
                 return (
                   <button
                     key={pack.id}

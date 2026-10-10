@@ -25,6 +25,7 @@ import {
   getNight,
   getTablePackage,
   type NightId,
+  isWhatsAppOnly,
 } from "@/lib/tables";
 
 /** dueAt and releasesAt are epoch ms: see holdWindow for what each one means. */
@@ -146,6 +147,12 @@ export async function createReservation(
   const table = getTablePackage(packageId);
   if (!table) {
     return respond({ ok: false, error: "Please choose an area." });
+  }
+  if (isWhatsAppOnly(table.id)) {
+    return respond({
+      ok: false,
+      error: `${table.name} tables are reserved through our team on WhatsApp.`,
+    });
   }
 
   const seat = getSeat(seatId);

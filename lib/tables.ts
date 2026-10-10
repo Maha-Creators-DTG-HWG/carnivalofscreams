@@ -110,10 +110,10 @@ export const TABLE_PACKAGES = [
     capacity: "10–12",
     seats: 12,
     tickets: 6,
-    priceIdr: 650_000,
-    minSpendIdr: 20_000_000,
+    priceIdr: 0,
+    minSpendIdr: 15_000_000,
     range: "V1–V4",
-    blurb: "A reserved VVIP sofa for 10 to 12. Booking fee includes six event tickets.",
+    blurb: "A reserved VVIP sofa for 10 to 12. Free booking fee, includes six event tickets.",
     reservation: "1 VVIP sofa reservation",
   },
 ] as const;
@@ -137,6 +137,13 @@ const PACKAGE_ALIASES: Record<string, TablePackageId> = {
   regular: "onomy",
   standard: "onomy",
 };
+
+/** Areas that are reserved through customer service on WhatsApp, never online. */
+const WHATSAPP_ONLY: readonly TablePackageId[] = ["vvip"];
+
+export function isWhatsAppOnly(id: string | null | undefined) {
+  return WHATSAPP_ONLY.includes(id as TablePackageId);
+}
 
 export function asPackageId(value: unknown): TablePackageId | undefined {
   if (typeof value !== "string") return undefined;

@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   asPackageId,
+  isWhatsAppOnly,
   formatIdr,
   getTablePackage,
   TABLE_PACKAGES,
@@ -43,7 +44,7 @@ test("COS26 areas match the plotting guide", () => {
   assert.equal(getTablePackage("onomy")?.range, "O4–O6");
   assert.equal(getTablePackage("onomy")?.furniture, "Exclusive table");
 
-  assert.equal(getTablePackage("vvip")?.minSpendIdr, 20_000_000);
+  assert.equal(getTablePackage("vvip")?.minSpendIdr, 15_000_000);
   assert.equal(getTablePackage("vvip")?.capacity, "10–12");
   assert.equal(getTablePackage("vvip")?.tickets, 6);
   assert.equal(getTablePackage("vvip")?.range, "V1–V4");
@@ -59,4 +60,13 @@ test("legacy package ids still resolve to COS26 areas", () => {
   assert.equal(asPackageId("regular"), "onomy");
   assert.equal(asPackageId("standard"), "onomy");
   assert.equal(asPackageId("unknown"), undefined);
+});
+
+test("only VVIP is reserved through WhatsApp", () => {
+  assert.equal(isWhatsAppOnly("vvip"), true);
+  for (const pack of TABLE_PACKAGES) {
+    assert.equal(isWhatsAppOnly(pack.id), pack.id === "vvip", pack.id);
+  }
+  assert.equal(isWhatsAppOnly(undefined), false);
+  assert.equal(isWhatsAppOnly("unknown"), false);
 });
