@@ -147,29 +147,30 @@ export function invoiceHtml(fields: InvoiceFields) {
   const img = (name: string, alt: string, width: string) =>
     `<img src="${assets}/${name}" alt="${escapeHtml(alt)}" style="display:block;width:${width};height:auto;margin:0 auto;border:0">`;
   const black = `${assets}/black.png`;
-  // Black is also a 1px image: clients that recolour backgrounds (dark or light
-  // mode) leave images alone, and the [data-og*] rules stop Gmail's recolouring.
-  const blackBg = `background-color:#000000;background-image:url('${black}')`;
+  // Gmail's dark mode flips plain background colours and text colours, which
+  // turned the card white. Gradients and images are left alone, so every
+  // background here is one of those, and the button is a picture.
+  const solid = (colour: string) => `background-color:${colour};background-image:linear-gradient(${colour},${colour})`;
+  const dark = solid("#000000");
   return `<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark only"><meta name="supported-color-schemes" content="dark only">
-<style>:root{color-scheme:dark only;supported-color-schemes:dark only}body,table,td{background-color:#000000}
-[data-ogsb] .bg{background-color:#000000!important}[data-ogsc] .tx{color:#e9eefb!important}[data-ogsc] .mu{color:#8d9bc0!important}[data-ogsc] .btn{background-color:#e9eefb!important;color:#000000!important}
-@media (prefers-color-scheme:light){body,table,td{background-color:#000000!important}}</style></head><body bgcolor="#000000" background="${black}" style="margin:0;padding:0;${blackBg};font-family:${FONT}">
-<table role="presentation" class="bg" width="100%" cellpadding="0" cellspacing="0" bgcolor="#000000" background="${black}" style="${blackBg}"><tr><td class="bg" align="center" bgcolor="#000000" background="${black}" style="${blackBg}">
-<table role="presentation" class="bg" width="600" cellpadding="0" cellspacing="0" bgcolor="#000000" style="width:100%;max-width:600px;${blackBg}">
-<tr><td class="bg" background="${assets}/bg-top.jpg" bgcolor="#000000" valign="top" style="background-color:#000000;background-image:url('${assets}/bg-top.jpg');background-size:100% auto;background-repeat:no-repeat;background-position:top center;padding:8% 0 0;text-align:center">
+<style>:root{color-scheme:dark only;supported-color-schemes:dark only}
+[data-ogsb] .bg{background-color:#000000!important}[data-ogsc] .tx{color:#e9eefb!important}[data-ogsc] .mu{color:#8d9bc0!important}</style></head><body bgcolor="#000000" background="${black}" style="margin:0;padding:0;${dark};font-family:${FONT}">
+<table role="presentation" class="bg" width="100%" cellpadding="0" cellspacing="0" bgcolor="#000000" background="${black}" style="${dark}"><tr><td class="bg" align="center" bgcolor="#000000" background="${black}" style="${dark}">
+<table role="presentation" class="bg" width="600" cellpadding="0" cellspacing="0" bgcolor="#000000" background="${black}" style="width:100%;max-width:600px;${dark}">
+<tr><td background="${assets}/bg-top.jpg" valign="top" style="background-image:url('${assets}/bg-top.jpg');background-size:100% auto;background-repeat:no-repeat;background-position:top center;padding:8% 0 0;text-align:center">
 ${img("logo.png", "Carnaval of Screams: The Arrival. 30–31 October 2026, Hosel Driving Range.", "77%")}
 <div style="height:0;padding-top:9%;line-height:0;font-size:0">&nbsp;</div>
 ${img("title.png", "Your reservation confirmed", "74%")}
 <div style="padding:22px 12% 0">
 <p class="mu" style="margin:0;color:#8d9bc0;font-size:10px;letter-spacing:4px;text-transform:uppercase">Booking code</p>
-<p class="tx" style="margin:6px 0 0;padding:10px 6px;border:1px solid #2a3a6e;background:#0a1020;color:#cfe0ff;font-size:17px;letter-spacing:1px;font-family:Menlo,Consolas,monospace;word-break:break-all">${escapeHtml(fields.bookingCode)}</p>
+<p class="tx" style="margin:6px 0 0;padding:10px 6px;border:1px solid #2a3a6e;${solid("#0a1020")};color:#cfe0ff;font-size:17px;letter-spacing:1px;font-family:Menlo,Consolas,monospace;word-break:break-all">${escapeHtml(fields.bookingCode)}</p>
 <p class="tx" style="margin:8px 0 12px;color:#aeb8d6;font-size:11px;line-height:1.4">Show this code at the door. It is also your code for VIP tickets.</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #1b2340;text-align:left">${rows}</table>
-<p style="margin:16px 0 0"><a class="btn" href="${escapeHtml(fields.vipUrl)}" style="display:inline-block;background:#e9eefb;color:#000000;text-decoration:none;font-size:11px;letter-spacing:3px;text-transform:uppercase;padding:12px 22px">Get VIP tickets (add on)</a></p>
+<p style="margin:16px 0 0"><a href="${escapeHtml(fields.vipUrl)}"><img src="${assets}/vip-button.png" width="240" alt="Get VIP tickets (add on)" style="display:block;width:240px;max-width:100%;height:auto;margin:0 auto;border:0"></a></p>
 <p class="mu" style="margin:12px 0 0;color:#8d9bc0;font-size:11px">Questions? <a href="${WHATSAPP_URL}" style="color:#e9eefb">Message us on WhatsApp</a></p>
 </div>
 </td></tr>
-<tr><td class="bg" bgcolor="#000000" style="padding:0;line-height:0;font-size:0;${blackBg}"><img src="${assets}/bg-bottom.jpg" alt="" style="display:block;width:100%;height:auto;border:0"></td></tr>
+<tr><td style="padding:0;line-height:0;font-size:0"><img src="${assets}/bg-bottom.jpg" alt="" style="display:block;width:100%;height:auto;border:0"></td></tr>
 </table></td></tr></table></body></html>`;
 }
 
