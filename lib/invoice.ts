@@ -122,13 +122,15 @@ const FONT = "'Angie Sans','Avenir Next',Helvetica,Arial,sans-serif";
 
 /**
  * Table-based and inline-styled so it survives Gmail, Outlook and phone mail apps.
- * The design (public/email/invoice.jpg, 1200x1800 = 2x) is the background of one
- * 600x900 cell and the live text sits in its empty middle. Outlook for Windows
- * ignores backgrounds and shows the same text on plain #060606.
- * Angie Sans only shows for readers who have it installed: mail apps can't load web fonts.
+ * Responsive without media queries: the cave artwork is a background that scales
+ * with the card width, the logo and title are images sized in %, and the details
+ * are live text. Assets live in public/email/ (bg-top, bg-bottom, logo, title) and
+ * are sliced from the design at 2x. Outlook for Windows ignores backgrounds and
+ * shows the same text on plain black. Angie Sans only shows for readers who have it
+ * installed: mail apps can't load web fonts.
  */
 export function invoiceHtml(fields: InvoiceFields) {
-  const image = `${getSiteUrl()}/email/invoice.jpg`;
+  const assets = `${getSiteUrl()}/email`;
   // Shorter than the plain-text rows: the card has room for one line each.
   const rows = invoiceRows(fields)
     .map(([label, value]): [string, string] =>
@@ -138,23 +140,29 @@ export function invoiceHtml(fields: InvoiceFields) {
     )
     .map(
       ([label, value]) =>
-        `<tr><td style="padding:4px 0;border-bottom:1px solid #1b2340;color:#8d9bc0;font-size:10px;letter-spacing:1px;text-transform:uppercase;vertical-align:middle;width:44%">${escapeHtml(label)}</td>` +
-        `<td style="padding:4px 0;border-bottom:1px solid #1b2340;color:#e9eefb;font-size:13px;vertical-align:middle">${escapeHtml(value)}</td></tr>`,
+        `<tr><td style="padding:5px 0;border-bottom:1px solid #1b2340;color:#8d9bc0;font-size:10px;letter-spacing:1px;text-transform:uppercase;vertical-align:middle;width:44%">${escapeHtml(label)}</td>` +
+        `<td style="padding:5px 0 5px 8px;border-bottom:1px solid #1b2340;color:#e9eefb;font-size:13px;vertical-align:middle">${escapeHtml(value)}</td></tr>`,
     )
     .join("");
-  return `<!doctype html><html><body style="margin:0;padding:0;background:#060606;font-family:${FONT}">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#060606" style="background:#060606"><tr><td align="center">
+  const img = (name: string, alt: string, width: string) =>
+    `<img src="${assets}/${name}" alt="${escapeHtml(alt)}" style="display:block;width:${width};height:auto;margin:0 auto;border:0">`;
+  return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;background:#000000;font-family:${FONT}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#000000" style="background:#000000"><tr><td align="center">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px">
-<tr><td background="${image}" bgcolor="#060606" width="600" height="900" valign="top" style="width:600px;height:900px;background-color:#060606;background-image:url('${image}');background-size:600px 900px;background-repeat:no-repeat;background-position:top center;padding:0">
-<div style="padding:304px 84px 0;text-align:center">
+<tr><td background="${assets}/bg-top.jpg" bgcolor="#000000" valign="top" style="background-color:#000000;background-image:url('${assets}/bg-top.jpg');background-size:100% auto;background-repeat:no-repeat;background-position:top center;padding:8% 0 0;text-align:center">
+${img("logo.png", "Carnaval of Screams: The Arrival. 30–31 October 2026, Hosel Driving Range.", "77%")}
+<div style="height:0;padding-top:9%;line-height:0;font-size:0">&nbsp;</div>
+${img("title.png", "Your reservation confirmed", "74%")}
+<div style="padding:22px 12% 0">
 <p style="margin:0;color:#8d9bc0;font-size:10px;letter-spacing:4px;text-transform:uppercase">Booking code</p>
-<p style="margin:6px 0 0;padding:9px 6px;border:1px solid #2a3a6e;background:#0a1020;color:#cfe0ff;font-size:17px;letter-spacing:1px;font-family:Menlo,Consolas,monospace">${escapeHtml(fields.bookingCode)}</p>
-<p style="margin:7px 0 10px;color:#aeb8d6;font-size:11px;line-height:1.4">Show this code at the door. It is also your code for VIP tickets.</p>
+<p style="margin:6px 0 0;padding:10px 6px;border:1px solid #2a3a6e;background:#0a1020;color:#cfe0ff;font-size:17px;letter-spacing:1px;font-family:Menlo,Consolas,monospace;word-break:break-all">${escapeHtml(fields.bookingCode)}</p>
+<p style="margin:8px 0 12px;color:#aeb8d6;font-size:11px;line-height:1.4">Show this code at the door. It is also your code for VIP tickets.</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #1b2340;text-align:left">${rows}</table>
-<p style="margin:12px 0 0"><a href="${escapeHtml(fields.vipUrl)}" style="display:inline-block;background:#e9eefb;color:#060606;text-decoration:none;font-size:11px;letter-spacing:3px;text-transform:uppercase;padding:11px 22px">Get VIP tickets (add on)</a></p>
-<p style="margin:9px 0 0;color:#8d9bc0;font-size:11px">Questions? <a href="${WHATSAPP_URL}" style="color:#e9eefb">Message us on WhatsApp</a></p>
+<p style="margin:16px 0 0"><a href="${escapeHtml(fields.vipUrl)}" style="display:inline-block;background:#e9eefb;color:#000000;text-decoration:none;font-size:11px;letter-spacing:3px;text-transform:uppercase;padding:12px 22px">Get VIP tickets (add on)</a></p>
+<p style="margin:12px 0 0;color:#8d9bc0;font-size:11px">Questions? <a href="${WHATSAPP_URL}" style="color:#e9eefb">Message us on WhatsApp</a></p>
 </div>
 </td></tr>
+<tr><td style="padding:0;line-height:0;font-size:0"><img src="${assets}/bg-bottom.jpg" alt="" style="display:block;width:100%;height:auto;border:0"></td></tr>
 </table></td></tr></table></body></html>`;
 }
 
