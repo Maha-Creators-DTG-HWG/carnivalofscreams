@@ -185,13 +185,13 @@ h6 {
   border: 0;
   background: transparent;
   height: 32px;
-  padding: 4px 10px;
+  padding: 4px 6px;
   color: var(--tabs-text-muted);
   cursor: pointer;
   border-radius: 48px;
   z-index: 1;
   white-space: nowrap;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -232,6 +232,7 @@ h6 {
   .t-tab {
     height: 36px;
     padding: 4px 16px;
+    letter-spacing: 0.12em;
   }
 
   .t-tabs-pill {
