@@ -1,7 +1,18 @@
-const ERRORS: Record<string, string> = {
-  code: "We could not find that booking code. Use the booking code from your table invoice.",
-  closed: "VIP tickets are not on sale yet. Please check back soon.",
-  lookup: "We could not check that code. Please try again in a moment.",
+import NoticePopup from "./NoticePopup";
+
+const NOTICES: Record<string, { title: string; message: string }> = {
+  code: {
+    title: "Booking code not found",
+    message: "We could not find that booking code. Use the booking code from your table invoice.",
+  },
+  closed: {
+    title: "Coming soon",
+    message: "VIP tickets are not on sale yet. Please check back soon.",
+  },
+  lookup: {
+    title: "Please try again",
+    message: "We could not check that code. Please try again in a moment.",
+  },
 };
 
 const field =
@@ -10,7 +21,7 @@ const button =
   "btn-press inline-flex items-center justify-center border border-white/80 bg-white px-8 py-3 font-heading text-[11px] tracking-[0.28em] text-black transition-colors duration-200 hover:bg-transparent hover:text-white";
 
 export default function VipView({ code, error }: { code: string; error?: string }) {
-  const message = error ? (ERRORS[error] ?? ERRORS.lookup) : null;
+  const notice = error ? (NOTICES[error] ?? NOTICES.lookup) : null;
 
   return (
     <div className="mx-auto flex w-full max-w-xl flex-col px-6 pb-28 pt-24 text-center sm:pt-32">
@@ -24,11 +35,7 @@ export default function VipView({ code, error }: { code: string; error?: string 
         Enter the booking code from your table invoice to get your VIP tickets.
       </p>
 
-      {message ? (
-        <p id="vip-error" role="alert" className="mt-8 border border-gold-bright/40 bg-white/5 p-3 text-sm text-white">
-          {message}
-        </p>
-      ) : null}
+      {notice ? <NoticePopup key={error} title={notice.title} message={notice.message} /> : null}
 
       <form action="/vip" method="get" className="mt-10 flex flex-col gap-4 text-left">
         <label className="flex flex-col gap-2">
@@ -38,8 +45,7 @@ export default function VipView({ code, error }: { code: string; error?: string 
             defaultValue={code}
             placeholder="COS-30-LUX-…"
             autoComplete="off"
-            aria-invalid={message ? true : undefined}
-            aria-describedby={message ? "vip-error" : undefined}
+            aria-invalid={notice && error !== "closed" ? true : undefined}
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
