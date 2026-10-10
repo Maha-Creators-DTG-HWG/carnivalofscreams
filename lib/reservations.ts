@@ -1,6 +1,7 @@
 import { insertAuditLogSafe } from "./audit";
 import { getDb } from "./db";
 import { PublicError } from "./errors";
+import { newOrderId } from "./midtrans/orders";
 import { getSeat } from "./seats";
 import { asPackageId, getTablePackage, type NightId, type TablePackageId } from "./tables";
 
@@ -495,7 +496,7 @@ export async function insertManualBooking(entry: ManualBooking) {
   const { error } = await getDb()
     .from("reservations")
     .insert({
-      order_id: `MAN-${entry.nightId}-${seat.short}-${Date.now().toString(36)}`,
+      order_id: newOrderId(seat.packageId, entry.nightId),
       name: entry.name,
       nik: entry.nik || null,
       email: "",

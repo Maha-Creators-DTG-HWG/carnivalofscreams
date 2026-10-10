@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import { getMidtransClientKey, getSnapJsUrl } from "@/lib/midtrans";
-import { getSeat } from "@/lib/seats";
-import { getNight } from "@/lib/tables";
-import { getVipAllowance, getVipPrice, normalizeBookingCode } from "@/lib/vip";
+import { VIP_TICKET_URL } from "@/lib/site";
+import { isPaidTableBooking, normalizeBookingCode } from "@/lib/vip";
 
-import VipView, { type VipAllowanceView } from "./VipView";
+import VipView from "./VipView";
 
 export const metadata: Metadata = {
   title: "VIP tickets",
@@ -23,43 +22,23 @@ export default async function VipPage({
 }) {
   const params = await searchParams;
   const code = normalizeBookingCode(first(params.code));
-  let error = first(params.error) || undefined;
 
-  let allowance: VipAllowanceView | null = null;
-  let priceIdr: number | null = null;
+  // A paid table booking is the only thing that opens the door.
+  let valid = false;
+  let error: string | undefined;
   if (code) {
     try {
-      priceIdr = await getVipPrice();
-      const found = await getVipAllowance(code);
-      if (found) {
-        const night = getNight(found.reservation.nightId);
-        const seat = found.reservation.seatId ? getSeat(found.reservation.seatId) : undefined;
-        allowance = {
-          code,
-          night: night ? `${night.day} · ${night.label}` : found.reservation.nightId,
-          table: seat?.label ?? null,
-          limit: found.limit,
-          sold: found.sold,
-          held: found.held,
-          remaining: found.remaining,
-        };
-      } else {
-        error ??= "code";
-      }
+      valid = await isPaidTableBooking(code);
+      if (!valid) error = "code";
     } catch (cause) {
-      console.error("[vip] failed to load allowance", cause);
-      error ??= "payment";
+      console.error("[vip] failed to check booking code", cause);
+      error = "lookup";
     }
   }
 
-  return (
-    <VipView
-      code={code}
-      error={error}
-      priceIdr={priceIdr}
-      allowance={allowance}
-      snapJsUrl={getSnapJsUrl()}
-      clientKey={getMidtransClientKey()}
-    />
-  );
+  // redirect() throws, so it stays outside the try.
+  if (valid && VIP_TICKET_URL) redirect(VIP_TICKET_URL);
+  if (valid) error = "closed";
+
+  return <VipView code={code} error={error} />;
 }

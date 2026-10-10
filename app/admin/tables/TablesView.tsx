@@ -445,6 +445,13 @@ function TablePanel({
             </p>
           ) : null}
 
+          {manual && booking?.orderId ? (
+            <div className="flex items-baseline justify-between gap-4 border-t border-white/12 px-5 py-3 text-[13px]">
+              <span className="text-white/55">Booking code</span>
+              <span className="text-white tabular-nums select-all">{booking.orderId}</span>
+            </div>
+          ) : null}
+
           {manual ? (
             <form action={save} className="grid gap-3 border-t border-white/12 px-5 pt-4 pb-5">
               <p className="text-sm text-white">

@@ -123,7 +123,7 @@ export default function ReserveWorkspace({ enabled, snapJsUrl, clientKey }: Prop
               VIP tickets
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-white/65">
-              Already have a table? Add VIP tickets with your booking code.
+              Already have a table? Enter your booking code to get VIP tickets.
             </p>
             <form action="/vip" method="get" className="mt-4 flex gap-2">
               <label htmlFor="vip-code" className="sr-only">
@@ -144,7 +144,7 @@ export default function ReserveWorkspace({ enabled, snapJsUrl, clientKey }: Prop
                 type="submit"
                 className="btn-press shrink-0 border border-white/20 bg-transparent px-5 py-3 font-heading text-[11px] tracking-[0.28em] text-white/70 transition-colors duration-200 hover:border-white/50 hover:text-white"
               >
-                Find booking
+                Get VIP tickets
               </button>
             </form>
           </div>
