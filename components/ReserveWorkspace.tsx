@@ -172,7 +172,7 @@ export default function ReserveWorkspace({ enabled, snapJsUrl, clientKey, delive
                 type="submit"
                 className="btn-press shrink-0 border border-white/20 bg-transparent px-5 py-3 font-heading text-[11px] tracking-[0.28em] text-white/70 transition-colors duration-200 hover:border-white/50 hover:text-white"
               >
-                Get VIP tickets
+                Get VIP tickets (add on)
               </button>
             </form>
           </div>

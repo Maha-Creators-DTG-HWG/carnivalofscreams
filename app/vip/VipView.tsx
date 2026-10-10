@@ -54,7 +54,7 @@ export default function VipView({ code, error }: { code: string; error?: string 
           />
         </label>
         <button type="submit" className={`${button} self-center`}>
-          Get VIP tickets
+          Get VIP tickets (add on)
         </button>
       </form>
     </div>

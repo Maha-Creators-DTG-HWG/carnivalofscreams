@@ -104,7 +104,7 @@ export function invoiceText(fields: InvoiceFields) {
     "",
     ...invoiceRows(fields).map(([label, value]) => `${label}: ${value}`),
     "",
-    `Get VIP tickets with this booking code: ${fields.vipUrl}`,
+    `GET VIP TICKETS (ADD ON) with this booking code: ${fields.vipUrl}`,
     "",
     "Carnaval of Screams · Yogyakarta, Indonesia · 30–31 October 2026",
     `Questions? Message us on WhatsApp: ${WHATSAPP_URL}`,
@@ -141,7 +141,7 @@ export function invoiceHtml(fields: InvoiceFields) {
 </td></tr>
 <tr><td style="padding:16px 28px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #2a2433">${rows}</table></td></tr>
 <tr><td style="padding:4px 28px 24px;text-align:center">
-<a href="${escapeHtml(fields.vipUrl)}" style="display:inline-block;background:#ffffff;color:#050308;text-decoration:none;font-size:12px;letter-spacing:3px;text-transform:uppercase;padding:14px 26px">Get VIP tickets</a>
+<a href="${escapeHtml(fields.vipUrl)}" style="display:inline-block;background:#ffffff;color:#050308;text-decoration:none;font-size:12px;letter-spacing:3px;text-transform:uppercase;padding:14px 26px">Get VIP tickets (add on)</a>
 </td></tr>
 <tr><td style="padding:16px 28px 26px;border-top:1px solid #2a2433;text-align:center;color:#8e8a99;font-size:12px;line-height:1.6">
 Carnaval of Screams · Yogyakarta, Indonesia · 30–31 October 2026<br>
