@@ -118,34 +118,42 @@ const escapeHtml = (value: string) =>
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
 
-/** Table-based and inline-styled so it survives Gmail, Outlook and phone mail apps. */
+const FONT = "'Angie Sans','Avenir Next',Helvetica,Arial,sans-serif";
+
+/**
+ * Table-based and inline-styled so it survives Gmail, Outlook and phone mail apps.
+ * The design (public/email/invoice.jpg, 1200x1800 = 2x) is the background of one
+ * 600x900 cell and the live text sits in its empty middle. Outlook for Windows
+ * ignores backgrounds and shows the same text on plain #060606.
+ * Angie Sans only shows for readers who have it installed: mail apps can't load web fonts.
+ */
 export function invoiceHtml(fields: InvoiceFields) {
+  const image = `${getSiteUrl()}/email/invoice.jpg`;
+  // Shorter than the plain-text rows: the card has room for one line each.
   const rows = invoiceRows(fields)
+    .map(([label, value]): [string, string] =>
+      label.startsWith("Minimum spend")
+        ? ["Min. spend (at venue)", fields.minSpendLabel]
+        : [label.replace(" included", ""), value],
+    )
     .map(
       ([label, value]) =>
-        `<tr><td style="padding:8px 0;color:#8e8a99;font-size:13px;vertical-align:top;width:45%">${escapeHtml(label)}</td>` +
-        `<td style="padding:8px 0;color:#ffffff;font-size:14px">${escapeHtml(value)}</td></tr>`,
+        `<tr><td style="padding:4px 0;border-bottom:1px solid #1b2340;color:#8d9bc0;font-size:10px;letter-spacing:1px;text-transform:uppercase;vertical-align:middle;width:44%">${escapeHtml(label)}</td>` +
+        `<td style="padding:4px 0;border-bottom:1px solid #1b2340;color:#e9eefb;font-size:13px;vertical-align:middle">${escapeHtml(value)}</td></tr>`,
     )
     .join("");
-  return `<!doctype html><html><body style="margin:0;padding:0;background:#050308;font-family:Helvetica,Arial,sans-serif">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#050308;padding:32px 12px"><tr><td align="center">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#0d0714;border:1px solid #2a2433">
-<tr><td style="padding:28px 28px 8px;text-align:center">
-<p style="margin:0;color:#8e8a99;font-size:11px;letter-spacing:4px;text-transform:uppercase">Carnaval of Screams</p>
-<h1 style="margin:12px 0 0;color:#ffffff;font-size:24px;letter-spacing:2px;font-weight:normal">Your table is confirmed</h1>
-</td></tr>
-<tr><td style="padding:20px 28px 4px;text-align:center">
-<p style="margin:0;color:#8e8a99;font-size:12px;letter-spacing:2px;text-transform:uppercase">Booking code</p>
-<p style="margin:6px 0 0;color:#f3cf8a;font-size:22px;letter-spacing:1px;font-family:Menlo,Consolas,monospace">${escapeHtml(fields.bookingCode)}</p>
-<p style="margin:8px 0 0;color:#c9c5d2;font-size:13px;line-height:1.5">Show this code at the door. It is also your code for VIP tickets.</p>
-</td></tr>
-<tr><td style="padding:16px 28px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #2a2433">${rows}</table></td></tr>
-<tr><td style="padding:4px 28px 24px;text-align:center">
-<a href="${escapeHtml(fields.vipUrl)}" style="display:inline-block;background:#ffffff;color:#050308;text-decoration:none;font-size:12px;letter-spacing:3px;text-transform:uppercase;padding:14px 26px">Get VIP tickets (add on)</a>
-</td></tr>
-<tr><td style="padding:16px 28px 26px;border-top:1px solid #2a2433;text-align:center;color:#8e8a99;font-size:12px;line-height:1.6">
-Carnaval of Screams · Yogyakarta, Indonesia · 30–31 October 2026<br>
-Questions? <a href="${WHATSAPP_URL}" style="color:#ffffff">Message us on WhatsApp</a>
+  return `<!doctype html><html><body style="margin:0;padding:0;background:#060606;font-family:${FONT}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#060606" style="background:#060606"><tr><td align="center">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px">
+<tr><td background="${image}" bgcolor="#060606" width="600" height="900" valign="top" style="width:600px;height:900px;background-color:#060606;background-image:url('${image}');background-size:600px 900px;background-repeat:no-repeat;background-position:top center;padding:0">
+<div style="padding:304px 84px 0;text-align:center">
+<p style="margin:0;color:#8d9bc0;font-size:10px;letter-spacing:4px;text-transform:uppercase">Booking code</p>
+<p style="margin:6px 0 0;padding:9px 6px;border:1px solid #2a3a6e;background:#0a1020;color:#cfe0ff;font-size:17px;letter-spacing:1px;font-family:Menlo,Consolas,monospace">${escapeHtml(fields.bookingCode)}</p>
+<p style="margin:7px 0 10px;color:#aeb8d6;font-size:11px;line-height:1.4">Show this code at the door. It is also your code for VIP tickets.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #1b2340;text-align:left">${rows}</table>
+<p style="margin:12px 0 0"><a href="${escapeHtml(fields.vipUrl)}" style="display:inline-block;background:#e9eefb;color:#060606;text-decoration:none;font-size:11px;letter-spacing:3px;text-transform:uppercase;padding:11px 22px">Get VIP tickets (add on)</a></p>
+<p style="margin:9px 0 0;color:#8d9bc0;font-size:11px">Questions? <a href="${WHATSAPP_URL}" style="color:#e9eefb">Message us on WhatsApp</a></p>
+</div>
 </td></tr>
 </table></td></tr></table></body></html>`;
 }
