@@ -541,6 +541,23 @@ export async function cancelOnlineBooking(orderId: string) {
   return data;
 }
 
+/**
+ * Removes an online booking row for good (test bookings). Unlike cancelling it
+ * leaves nothing behind but the audit log; the Midtrans callbacks stay in their own table.
+ */
+export async function deleteOnlineBooking(orderId: string) {
+  const { data, error } = await getDb()
+    .from("reservations")
+    .delete()
+    .eq("order_id", orderId)
+    .or(`channel_id.is.null,channel_id.neq.${MANUAL_CHANNEL}`)
+    .select(RESERVATION_COLUMNS)
+    .maybeSingle<ReservationRow>();
+  if (error) throw error;
+  if (!data) throw new PublicError("This booking was already deleted.");
+  return data;
+}
+
 export async function updateManualBooking(entry: ManualBooking) {
   const { data, error } = await getDb()
     .from("reservations")

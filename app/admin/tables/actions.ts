@@ -8,6 +8,7 @@ import { publicMessage } from "@/lib/errors";
 import {
   cancelOnlineBooking,
   deleteManualBooking,
+  deleteOnlineBooking,
   insertManualBooking,
   updateManualBooking,
   type ManualBooking,
@@ -109,6 +110,30 @@ export async function cancelBooking(orderId: unknown): Promise<TableActionResult
     orderId: id,
     path: "/admin/tables",
     payload: { admin, ...cancelled },
+  });
+  refresh();
+  return { ok: true };
+}
+
+export async function deleteBooking(orderId: unknown): Promise<TableActionResult> {
+  const admin = await requireAdmin("/admin/tables");
+  const id = String(orderId ?? "");
+  if (!id) return { ok: false, error: "Unknown booking." };
+
+  let removed;
+  try {
+    removed = await deleteOnlineBooking(id);
+  } catch (error) {
+    console.error("[admin] delete booking failed", error);
+    refresh();
+    return { ok: false, error: publicMessage(error, "Unable to delete. Check your connection and try again.") };
+  }
+  await insertAuditLogSafe({
+    event: "admin.booking.deleted",
+    orderId: id,
+    path: "/admin/tables",
+    // nik and phone are masked on the way in (see redactPii).
+    payload: { admin, removed },
   });
   refresh();
   return { ok: true };

@@ -10,7 +10,7 @@ import { formatIdr, getTablePackage, NIGHTS, TABLE_PACKAGES, type NightId } from
 import { TABLE_POINTS, VENUE_MAP } from "@/lib/venue-areas";
 
 import { PageHeader, Segmented, Stat, STATUS_COLOR, time } from "../ui";
-import { cancelBooking, saveGuestDetails, switchTableOff, switchTableOn } from "./actions";
+import { cancelBooking, deleteBooking, saveGuestDetails, switchTableOff, switchTableOn } from "./actions";
 
 export type TableBooking = {
   nightId: NightId;
@@ -368,6 +368,22 @@ function TablePanel({
     });
   }
 
+  function deletePaid() {
+    if (!booking) return;
+    const ok = window.confirm(
+      `Delete ${booking.orderId} for good?\n\n` +
+        `This removes the booking and opens ${seat.short} again. It can't be undone. ` +
+        `Use it for test bookings. For a real guest, use Cancel booking instead.`,
+    );
+    if (!ok) return;
+    setError(null);
+    once(async () => {
+      applyChange({ seatId: seat.id, booking: null });
+      const result = await deleteBooking(booking.orderId);
+      if (!result.ok) setError(result.error);
+    });
+  }
+
   function restore() {
     if (!undo) return;
     const guest = undo;
@@ -444,13 +460,23 @@ function TablePanel({
                 onClick={cancelPaid}
                 className={cn(BUTTON, "border border-white/30 text-white hover:bg-white/[0.06]")}
               >
-                {pending ? "Cancelling…" : "Cancel booking and reopen table"}
+                {pending ? "Working…" : "Cancel booking and reopen table"}
               </button>
               <p className="mt-2 text-[13px] text-white/55">
                 Opens the table for online booking again. Refund the guest in Midtrans.
               </p>
             </div>
           ) : null}
+          <div className="mt-4 border-t border-white/12 pt-4">
+            <button
+              type="button"
+              disabled={pending}
+              onClick={deletePaid}
+              className={cn(BUTTON, "text-white/70 underline decoration-white/30 underline-offset-4 hover:text-white")}
+            >
+              Delete booking (test bookings)
+            </button>
+          </div>
         </div>
       ) : (
         <>
