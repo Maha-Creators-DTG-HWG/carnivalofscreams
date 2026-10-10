@@ -7,6 +7,7 @@ import {
   getSnapJsUrl,
   isMidtransConfigured,
 } from "@/lib/midtrans";
+import { deliveryChannels } from "@/lib/invoice";
 
 export const metadata: Metadata = {
   title: "Reserve a table",
@@ -22,6 +23,7 @@ export default function ReservePage() {
       enabled={isMidtransConfigured()}
       snapJsUrl={getSnapJsUrl()}
       clientKey={getMidtransClientKey()}
+      delivery={deliveryChannels()}
     />
   );
 }

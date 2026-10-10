@@ -15,7 +15,7 @@ import {
   getReservationSafe,
   insertReservation,
   isUniqueViolation,
-  listTakenSeatIdsSafe,
+  listTakenSeatIds,
   releaseExpiredHoldsSafe,
   updateReservationCheckout,
 } from "@/lib/reservations";
@@ -62,12 +62,18 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value as Record<string, unknown>;
 }
 
+/** null means availability could not be read; the page must not show tables as free. */
 export async function listTakenSeatIdsAction(
   nightId: unknown,
-): Promise<string[]> {
+): Promise<string[] | null> {
   const id = asNightId(nightId);
-  if (!id) return [];
-  return listTakenSeatIdsSafe(id);
+  if (!id) return null;
+  try {
+    return await listTakenSeatIds(id);
+  } catch (error) {
+    console.error("[reserve] failed to load taken seats", error);
+    return null;
+  }
 }
 
 export async function createReservation(

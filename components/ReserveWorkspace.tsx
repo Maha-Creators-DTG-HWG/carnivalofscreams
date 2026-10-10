@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { listTakenSeatIdsAction } from "@/app/actions/reserve";
 import ReserveForm, {
@@ -14,11 +14,15 @@ type Props = {
   enabled: boolean;
   snapJsUrl: string;
   clientKey: string;
+  /** "by email and WhatsApp", "by email", … or null when no confirmation is sent. */
+  delivery: string | null;
 };
+
+export type Availability = "loading" | "ready" | "error";
 
 const TAKEN_POLL_MS = 5_000;
 
-export default function ReserveWorkspace({ enabled, snapJsUrl, clientKey }: Props) {
+export default function ReserveWorkspace({ enabled, snapJsUrl, clientKey, delivery }: Props) {
   const [preview, setPreview] = useState<ReservePreview>({
     step: "night",
     packageId: null,
@@ -26,6 +30,9 @@ export default function ReserveWorkspace({ enabled, snapJsUrl, clientKey }: Prop
     seatId: null,
   });
   const [takenSeatIds, setTakenSeatIds] = useState<string[]>([]);
+  const [availability, setAvailability] = useState<Availability>("loading");
+  const [retryKey, setRetryKey] = useState(0);
+  const loadedNight = useRef<string | null>(null);
   const [seatId, setSeatId] = useState<string | null>(null);
 
   const selectedSeat = preview.seatId ? getSeat(preview.seatId) : undefined;
@@ -41,10 +48,28 @@ export default function ReserveWorkspace({ enabled, snapJsUrl, clientKey }: Prop
   // within TAKEN_POLL_MS. Seat ids only, nothing private.
   useEffect(() => {
     let cancelled = false;
+    // Another day's taken tables must never show as this day's.
+    if (loadedNight.current !== preview.nightId) {
+      setTakenSeatIds([]);
+      setAvailability("loading");
+    }
     const load = () =>
-      void listTakenSeatIdsAction(preview.nightId).then((ids) => {
-        if (!cancelled) setTakenSeatIds(ids);
-      });
+      void listTakenSeatIdsAction(preview.nightId).then(
+        (ids) => {
+          if (cancelled) return;
+          if (ids === null) {
+            // Keep the last good list for this day if we had one; never fall back to "all free".
+            setAvailability("error");
+            return;
+          }
+          loadedNight.current = preview.nightId;
+          setTakenSeatIds(ids);
+          setAvailability("ready");
+        },
+        () => {
+          if (!cancelled) setAvailability("error");
+        },
+      );
     load();
     const id = setInterval(() => {
       if (!document.hidden) load();
@@ -53,7 +78,7 @@ export default function ReserveWorkspace({ enabled, snapJsUrl, clientKey }: Prop
       cancelled = true;
       clearInterval(id);
     };
-  }, [preview.nightId, preview.step]);
+  }, [preview.nightId, preview.step, retryKey]);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-20 sm:px-6 sm:pt-24 lg:px-8">
@@ -112,6 +137,9 @@ export default function ReserveWorkspace({ enabled, snapJsUrl, clientKey }: Prop
               snapJsUrl={snapJsUrl}
               clientKey={clientKey}
               takenSeatIds={takenSeatIds}
+              availability={availability}
+              onRetryAvailability={() => setRetryKey((key) => key + 1)}
+              delivery={delivery}
               seatId={seatId}
               onSeatChange={setSeatId}
               onPreviewChange={onPreviewChange}

@@ -7,7 +7,7 @@ import {
   insertMidtransCallbackSafe,
   requestMeta,
 } from "@/lib/audit";
-import { sendReservationInvoice } from "@/lib/invoice";
+import { deliveryChannels, sendReservationInvoice } from "@/lib/invoice";
 import {
   getTransactionStatus,
   isExpiredStatus,
@@ -208,8 +208,10 @@ export default async function ReservationConfirmedPage({
           Pick your table.
         </h1>
         <p className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-white/55 sm:text-base">
-          Choose a table in {summary.table?.name ?? "the paid area"}. We send
-          the invoice by email and WhatsApp after you confirm.
+          Choose a table in {summary.table?.name ?? "the paid area"}.{" "}
+          {deliveryChannels()
+            ? `We send the confirmation ${deliveryChannels()} after you confirm.`
+            : "Keep the booking code shown after you confirm."}
         </p>
         <div className="mt-10">
           <SeatPicker
@@ -228,7 +230,11 @@ export default async function ReservationConfirmedPage({
       <StatusShell
         kicker="Reservation held"
         title="Your table is held."
-        body="The invoice is on its way by email and WhatsApp. Bring the booking code to the door."
+        body={
+          deliveryChannels()
+            ? `The confirmation is on its way ${deliveryChannels()}. Bring the booking code to the door.`
+            : "Save your booking code below. Bring it to the door, and use it for VIP tickets."
+        }
         action={{ href: "/", label: "Back home" }}
       >
         {details}

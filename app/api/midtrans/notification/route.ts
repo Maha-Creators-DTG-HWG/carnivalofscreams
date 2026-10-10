@@ -15,7 +15,7 @@ import {
 } from "@/lib/midtrans";
 import {
   expireReservationHoldSafe,
-  markReservationPaidSafe,
+  markReservationPaid,
   PAID_CONFLICT,
 } from "@/lib/reservations";
 
@@ -76,11 +76,19 @@ export async function POST(request: Request) {
   }
 
   if (isPaidStatus(status.transactionStatus, status.fraudStatus)) {
-    const reservation = await markReservationPaidSafe({
-      orderId: fields.orderId,
-      transactionStatus: status.transactionStatus ?? "settlement",
-      channelId: status.paymentType,
-    });
+    let reservation;
+    try {
+      reservation = await markReservationPaid({
+        orderId: fields.orderId,
+        transactionStatus: status.transactionStatus ?? "settlement",
+        channelId: status.paymentType,
+      });
+    } catch (error) {
+      // Not saved here yet: a non-2xx answer makes Midtrans send it again,
+      // instead of the guest's money being acknowledged while the row stays unpaid.
+      console.error(`[midtrans] failed to mark ${fields.orderId} paid; asking Midtrans to retry`, error);
+      return NextResponse.json({ error: "Could not save payment" }, { status: 500 });
+    }
     if (!reservation) {
       console.error(
         `[midtrans] ${fields.orderId} is paid at Midtrans but no reservation was updated`,

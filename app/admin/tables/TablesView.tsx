@@ -199,8 +199,15 @@ export default function TablesView({ bookings }: { bookings: TableBooking[] }) {
                       >
                         <Swatch state={booking.kind} />
                         <span className="w-9 text-sm font-semibold text-white">{row.short}</span>
-                        <span className="min-w-0 flex-1 truncate text-sm text-white" title={booking.name || undefined}>
-                          {booking.name || <span className="text-white/55">No guest details yet</span>}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm text-white" title={booking.name || undefined}>
+                            {booking.name || <span className="text-white/55">No guest details yet</span>}
+                          </span>
+                          {booking.orderId ? (
+                            <span className="block truncate text-[12px] text-white/55 tabular-nums">
+                              {booking.orderId}
+                            </span>
+                          ) : null}
                         </span>
                         <span className="shrink-0 text-[13px] text-white/55">{STATE[booking.kind].label}</span>
                       </button>

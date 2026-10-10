@@ -6,7 +6,8 @@ import { useEffect, useRef, useState, useTransition, type FormEvent } from "reac
 
 import "@/types/midtrans-snap";
 import { waitForSnap } from "@/lib/snap-client";
-import { PAYMENT_DUE_MINUTES } from "@/lib/midtrans/types";
+import { HOLD_GRACE_SECONDS, PAYMENT_DUE_MINUTES } from "@/lib/midtrans/types";
+import type { Availability } from "@/components/ReserveWorkspace";
 import { createReservation } from "@/app/actions/reserve";
 import { getSeat, seatsForPackage } from "@/lib/seats";
 import {
@@ -31,6 +32,11 @@ type Props = {
   snapJsUrl: string;
   clientKey: string;
   takenSeatIds: string[];
+  /** Whether takenSeatIds is a real answer yet; tables are never shown free on a failed read. */
+  availability: Availability;
+  onRetryAvailability: () => void;
+  /** "by email and WhatsApp", "by email", … or null when no confirmation is sent. */
+  delivery: string | null;
   /** Seat selection is lifted so the floor plan can drive it too. */
   seatId: string | null;
   onSeatChange: (seatId: string | null) => void;
@@ -39,6 +45,25 @@ type Props = {
 
 const STEPS: ReserveStep[] = ["night", "area", "table", "details", "pay"];
 const STEP_LABELS = ["Day", "Area", "Table", "Details", "Pay"] as const;
+
+function AvailabilityNotice({ state, onRetry }: { state: Availability; onRetry: () => void }) {
+  if (state === "ready") return null;
+  if (state === "loading") {
+    return (
+      <p role="status" className="mt-3 text-sm text-white/70">
+        Checking which tables are free…
+      </p>
+    );
+  }
+  return (
+    <p role="alert" className="mt-3 border border-gold-bright/40 bg-white/5 p-3 text-sm text-white">
+      We could not check which tables are free right now.{" "}
+      <button type="button" onClick={onRetry} className="underline underline-offset-4 hover:text-white/80">
+        Try again
+      </button>
+    </p>
+  );
+}
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
@@ -77,10 +102,14 @@ export default function ReserveForm({
   snapJsUrl,
   clientKey,
   takenSeatIds,
+  availability,
+  onRetryAvailability,
+  delivery,
   seatId,
   onSeatChange,
   onPreviewChange,
 }: Props) {
+  const known = availability === "ready";
   const router = useRouter();
   const [step, setStep] = useState<ReserveStep>("night");
   const [pending, startTransition] = useTransition();
@@ -366,6 +395,11 @@ export default function ReserveForm({
               Tap an area to see it lit up on the floor plan. Table numbers come
               next.
             </p>
+            <p className="mt-2 text-xs leading-relaxed text-white/60">
+              Seats is how many people the table fits. Event tickets are the
+              entry tickets included in the booking fee.
+            </p>
+            <AvailabilityNotice state={availability} onRetry={onRetryAvailability} />
             <div className="mt-4 flex flex-col gap-3">
               {TABLE_PACKAGES.map((pack) => {
                 const free = freeSeatCount(pack.id);
@@ -374,7 +408,7 @@ export default function ReserveForm({
                   <button
                     key={pack.id}
                     type="button"
-                    disabled={free === 0}
+                    disabled={!known || free === 0}
                     aria-pressed={selected}
                     onClick={() => {
                       setPackageId(pack.id);
@@ -382,7 +416,7 @@ export default function ReserveForm({
                       setError(null);
                     }}
                     className={`block w-full border p-4 text-left transition-colors sm:p-5 ${
-                      free === 0
+                      !known || free === 0
                         ? "cursor-not-allowed border-white/10 bg-black/20 opacity-70"
                         : selected
                           ? "border-gold-bright bg-white/10 ring-1 ring-gold-bright/60"
@@ -411,17 +445,17 @@ export default function ReserveForm({
                       </span>
                     </span>
                     <span className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">
-                      <Fact label="Capacity" value={`${pack.capacity}\u00a0pax`} />
+                      <Fact label="Seats" value={`${pack.capacity}\u00a0people`} />
                       <Fact label="Type" value={pack.furniture} />
                       <Fact label="Min. consumption" value={formatIdr(pack.minSpendIdr)} />
-                      <Fact label="Included tickets" value={`${pack.tickets}\u00a0tickets`} />
+                      <Fact label="Event tickets included" value={`${pack.tickets}\u00a0tickets`} />
                     </span>
                     <span className="mt-4 flex items-center justify-between gap-3 border-t border-white/10 pt-3 text-sm">
                       <span className="text-white/70">
                         Tables <span className="font-medium text-white">{pack.range}</span>
                       </span>
-                      <span className={free === 0 ? "text-white/70" : "text-white/90"}>
-                        {free === 0 ? "Fully booked" : `${free}\u00a0open`}
+                      <span className={!known || free === 0 ? "text-white/70" : "text-white/90"}>
+                        {!known ? "Checking…" : free === 0 ? "Fully booked" : `${free}\u00a0open`}
                       </span>
                     </span>
                   </button>
@@ -452,7 +486,7 @@ export default function ReserveForm({
                 </span>
                 <span className="text-white/55">
                   {" "}
-                  · {table?.furniture} · {table?.capacity} pax ·{" "}
+                  · {table?.furniture} · seats {table?.capacity} ·{" "}
                   {table ? formatIdr(table.priceIdr) : ""}
                 </span>
               </p>
@@ -467,6 +501,7 @@ export default function ReserveForm({
                 Change area
               </button>
             </div>
+            <AvailabilityNotice state={availability} onRetry={onRetryAvailability} />
             <div className="mt-4 flex flex-wrap gap-1.5">
               {areaSeats.map((item) => {
                 const taken = takenSeatIds.includes(item.id);
@@ -475,7 +510,7 @@ export default function ReserveForm({
                   <button
                     key={item.id}
                     type="button"
-                    disabled={taken}
+                    disabled={!known || taken}
                     aria-pressed={selected}
                     aria-label={taken ? `${item.label}, taken` : item.label}
                     onClick={() => {
@@ -638,7 +673,8 @@ export default function ReserveForm({
               busy ||
               (step === "pay" && !enabled) ||
               (step === "area" && !packageId) ||
-              (step === "table" && !seatId)
+              (step === "table" && !seatId) ||
+              ((step === "area" || step === "table") && !known)
             }
             className="btn-press inline-flex items-center justify-center border border-white/80 bg-white px-5 py-3 font-heading text-[11px] tracking-[0.28em] text-black transition-colors duration-200 hover:bg-transparent hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white disabled:hover:text-black sm:text-xs"
           >
@@ -660,10 +696,15 @@ export default function ReserveForm({
 
         {step === "pay" ? (
           <p className="text-xs leading-relaxed text-white/55">
-            Pay the booking fee within {PAYMENT_DUE_MINUTES} minutes to keep this table. The hold
-            and the payment expire together. Minimum spend is paid at the venue
-            and is not included in the booking fee. Extra guests buy their own
-            tickets. We send the invoice by email and WhatsApp.
+            You have {PAYMENT_DUE_MINUTES} minutes to pay the booking fee. If your
+            payment is still processing when time runs out, we keep the table{" "}
+            {HOLD_GRACE_SECONDS / 60} more minutes before releasing it.
+            {table ? ` The booking fee includes ${table.tickets} event tickets; the table seats ${table.capacity}.` : ""}{" "}
+            Minimum spend is paid at the venue and is not included in the
+            booking fee. Extra guests buy their own tickets.{" "}
+            {delivery
+              ? `We send your confirmation and booking code ${delivery}.`
+              : "Keep the booking code shown after payment: you need it at the door and for VIP tickets."}
           </p>
         ) : null}
       </form>
