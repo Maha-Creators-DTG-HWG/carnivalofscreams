@@ -5,7 +5,8 @@ export const TICKETS_URL =
  * Where a correct VIP booking code sends the guest. Empty until the link is
  * decided: the page then says VIP tickets are not on sale yet.
  */
-export const VIP_TICKET_URL = "";
+export const VIP_TICKET_URL =
+  "https://artatix.co.id/event/carnaval_of_scream_2026_vip_ticket_reservation_only";
 
 export function getSiteUrl() {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
