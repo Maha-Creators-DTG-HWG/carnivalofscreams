@@ -4,6 +4,7 @@ import { cn } from "cn";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useOptimistic, useRef, useState, useTransition } from "react";
 
+import ZoomFrame from "@/components/ZoomFrame";
 import { getSeat, SEATS, type VenueSeat } from "@/lib/seats";
 import type { GuestDetails } from "@/lib/reservations";
 import { formatIdr, getTablePackage, NIGHTS, TABLE_PACKAGES, type NightId } from "@/lib/tables";
@@ -675,7 +676,7 @@ function FloorPlan({
   onSelect: (seatId: string) => void;
 }) {
   return (
-    <div className="overflow-hidden bg-black outline outline-1 -outline-offset-1 outline-white/10">
+    <ZoomFrame className="bg-black outline outline-1 -outline-offset-1 outline-white/10">
       <svg
         viewBox={`${PLAN_VIEW.x} ${PLAN_VIEW.y} ${PLAN_VIEW.width} ${PLAN_VIEW.height}`}
         className="block h-auto w-full"
@@ -737,6 +738,6 @@ function FloorPlan({
           );
         })}
       </svg>
-    </div>
+    </ZoomFrame>
   );
 }
