@@ -2,6 +2,15 @@ import type { NightId } from "./tables";
 
 export const LINEUP = [
   {
+    id: "dipha-barus-kc-jones",
+    nightId: "oct-30" as const,
+    day: "Day 1",
+    name: "Dipha Barus & KC Jones",
+    date: "30th October 2026",
+    image: "/images/guest-dipha-barus-kc-jones.webp",
+    alt: "Dipha Barus and KC Jones arriving on Day 1 of Carnaval of Screams: The Arrival",
+  },
+  {
     id: "basboi",
     nightId: "oct-30" as const,
     day: "Day 1",
