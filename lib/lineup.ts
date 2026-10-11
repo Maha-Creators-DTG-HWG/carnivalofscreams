@@ -64,6 +64,15 @@ export const LINEUP = [
     image: "/images/guest-pats-mafia.webp",
     alt: "Pats Mafia arriving on Day 2 of Carnaval of Screams: The Arrival",
   },
+  {
+    id: "dawngong",
+    nightId: "oct-31" as const,
+    day: "Day 2",
+    name: "Dawngong",
+    date: "31st October 2026",
+    image: "/images/guest-dawngong.webp",
+    alt: "Dawngong arriving on Day 2 of Carnaval of Screams: The Arrival",
+  },
 ] as const;
 
 export function getLineup(nightId: NightId) {

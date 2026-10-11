@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { TICKETS_URL } from "@/lib/site";
 import { PASSES } from "@/lib/tickets";
 
@@ -101,9 +103,15 @@ export default function Tickets() {
           href={TICKETS_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-2 inline-block text-xs tracking-[0.22em] text-white/70 transition-colors hover:text-white"
+          className="mt-3 inline-block transition-opacity hover:opacity-80"
         >
-          ARTATIX
+          <Image
+            src="/images/artatix-logo.png"
+            alt="Artatix"
+            width={526}
+            height={100}
+            className="h-7 w-auto sm:h-8"
+          />
         </a>
       </div>
     </section>
