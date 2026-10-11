@@ -10,7 +10,7 @@ export default function GuestStars() {
     >
       <div
         id="guest-stars"
-        className="relative mx-auto min-h-[calc(100svh-6.5rem)] w-full max-w-6xl text-center"
+        className="relative mx-auto min-h-[calc(100svh-6.5rem)] w-full max-w-7xl text-center"
       >
         <p className="font-heading text-[11px] tracking-[0.42em] text-white/55 sm:text-xs">
           Guest Stars
@@ -34,7 +34,7 @@ export default function GuestStars() {
               </span>
               <span className="h-px flex-1 bg-white/20" aria-hidden="true" />
             </div>
-            <ul className={`grid list-none grid-cols-2 gap-x-4 gap-y-8 p-0 sm:grid-cols-3 lg:grid-cols-5 mt-10`}>
+            <ul className={`grid list-none grid-cols-2 gap-x-4 gap-y-8 p-0 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 mt-10`}>
               {getLineup(night.id).map((guest) => (
             <li key={guest.id} className="group min-w-0 text-left">
               <figure className="relative aspect-[3/4] overflow-hidden border border-white/12 bg-[radial-gradient(ellipse_at_50%_65%,#252044_0%,#0d0714_65%)] transition-[border-color,transform] duration-300 motion-safe:group-hover:-translate-y-1 group-hover:border-white/35">
