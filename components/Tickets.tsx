@@ -6,7 +6,7 @@ export default function Tickets() {
     <section className="relative isolate overflow-hidden bg-ink px-6 pb-28 pt-24 sm:pb-36 sm:pt-0">
       <div
         id="tickets"
-        className="relative mx-auto w-full max-w-6xl text-center"
+        className="relative mx-auto w-full max-w-7xl text-center"
       >
         <p className="font-heading text-[11px] tracking-[0.42em] text-white/55 sm:text-xs">
           Carnaval of Screams
@@ -23,7 +23,7 @@ export default function Tickets() {
           Day Passes cover both.
         </p>
 
-        <div className="mt-16 grid gap-4 text-left sm:grid-cols-2 xl:grid-cols-3 xl:gap-5">
+        <div className="mt-16 grid gap-4 text-left sm:grid-cols-2 xl:grid-cols-4 xl:gap-5">
           {PASSES.map((pass) => (
             <article
               id={pass.id}
