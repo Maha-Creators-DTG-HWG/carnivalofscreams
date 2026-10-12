@@ -32,8 +32,7 @@ export const SEATS: VenueSeat[] = [
   ...seats("skyview", "skyview", "LS", "Luxer Skyview", 11),
   ...seats("tivex", "tivex", "T", "Tivex", 17),
   ...seats("perio", "perio", "P", "Perio", 3),
-  // Only O4-O6 are for sale; the ids keep their numbers so the map still lines up.
-  ...seats("onomy", "onomy", "O", "Onomy", 3, 4),
+  ...seats("onomy", "onomy", "O", "Onomy", 10),
   ...seats("vvip", "vvip", "V", "VVIP", 4),
 ];
 

@@ -84,7 +84,7 @@ export const TABLE_PACKAGES = [
     tickets: 6,
     priceIdr: 650_000,
     minSpendIdr: 2_500_000,
-    range: "O4–O6",
+    range: "O1–O10",
     blurb: "Four seats at an exclusive table. Booking fee includes six event tickets.",
     reservation: "1 exclusive table reservation",
   },

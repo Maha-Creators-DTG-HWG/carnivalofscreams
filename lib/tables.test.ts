@@ -41,7 +41,7 @@ test("COS26 areas match the plotting guide", () => {
 
   assert.equal(getTablePackage("onomy")?.priceIdr, 650_000);
   assert.equal(getTablePackage("onomy")?.minSpendIdr, 2_500_000);
-  assert.equal(getTablePackage("onomy")?.range, "O4–O6");
+  assert.equal(getTablePackage("onomy")?.range, "O1–O10");
   assert.equal(getTablePackage("onomy")?.furniture, "Exclusive table");
 
   assert.equal(getTablePackage("vvip")?.minSpendIdr, 15_000_000);
