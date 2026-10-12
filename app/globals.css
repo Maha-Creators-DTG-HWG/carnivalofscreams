@@ -245,6 +245,23 @@ h6 {
   font-weight: 700;
 }
 
+/* The heading font ships in one weight, so "bold" is built by hand: a stroke in
+   the text colour, scaled with the font size. font-synthesis off stops the
+   browser smearing a second, uneven faux bold on top of it. */
+h1,
+h2,
+h3,
+h4,
+.pass-title {
+  font-synthesis-weight: none;
+  -webkit-text-stroke: 0.035em currentColor;
+  paint-order: stroke fill;
+}
+
+.pass-title {
+  -webkit-text-stroke-width: 0.05em;
+}
+
 .pass-panel {
   position: relative;
   background: rgba(4, 7, 14, 0.52);
