@@ -7,7 +7,7 @@ import { WHATSAPP_URL } from "@/lib/site";
 export default function WhatsAppButton() {
   // Admin pages have their own per-guest WhatsApp links.
   const pathname = usePathname();
-  if (pathname.startsWith("/admin") || pathname.startsWith("/auth")) return null;
+  if (pathname.startsWith("/admin") || pathname.startsWith("/auth") || pathname === "/pricelist") return null;
 
   return (
     <a
