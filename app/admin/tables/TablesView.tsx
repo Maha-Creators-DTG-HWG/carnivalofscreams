@@ -8,7 +8,9 @@ import ZoomFrame from "@/components/ZoomFrame";
 import { getSeat, SEATS, type VenueSeat } from "@/lib/seats";
 import type { GuestDetails } from "@/lib/reservations";
 import { formatIdr, getTablePackage, NIGHTS, TABLE_PACKAGES, type NightId } from "@/lib/tables";
+import { getSiteUrl } from "@/lib/site";
 import { TABLE_POINTS, VENUE_MAP } from "@/lib/venue-areas";
+import { invoiceWhatsAppUrl } from "@/lib/wa-me";
 
 import { PageHeader, Segmented, Stat, STATUS_COLOR, time } from "../ui";
 import { cancelBooking, deleteBooking, saveGuestDetails, switchTableOff, switchTableOn } from "./actions";
@@ -453,6 +455,16 @@ function TablePanel({
               ? `Still paying. The hold ends${booking.expiresAt ? ` at ${time.format(booking.expiresAt)}` : ""} if payment doesn’t finish, and the table opens again.`
               : "Booked through the website, so it can’t be switched off here."}
           </p>
+          {booking.kind === "paid" && booking.phone ? (
+            <a
+              href={invoiceWhatsAppUrl(booking.phone, booking.name, booking.orderId, getSiteUrl())}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-block text-[13px] text-white underline decoration-white/30 underline-offset-4 hover:decoration-white"
+            >
+              Send invoice (PDF) on WhatsApp
+            </a>
+          ) : null}
           {booking.kind === "paid" ? (
             <div className="mt-4 border-t border-white/12 pt-4">
               <button
@@ -513,6 +525,19 @@ function TablePanel({
             <div className="flex items-baseline justify-between gap-4 border-t border-white/12 px-5 py-3 text-[13px]">
               <span className="text-white/55">Booking code</span>
               <span className="text-white tabular-nums select-all">{booking.orderId}</span>
+            </div>
+          ) : null}
+
+          {manual && booking?.orderId && booking.phone ? (
+            <div className="border-t border-white/12 px-5 py-3 text-[13px]">
+              <a
+                href={invoiceWhatsAppUrl(booking.phone, booking.name, booking.orderId, getSiteUrl())}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white"
+              >
+                Send invoice (PDF) on WhatsApp
+              </a>
             </div>
           ) : null}
 

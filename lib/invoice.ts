@@ -95,6 +95,15 @@ function invoiceRows(fields: InvoiceFields): [string, string][] {
   ];
 }
 
+/** Shorter than the plain-text rows: the email and PDF cards have room for one line each. */
+export function invoiceCardRows(fields: InvoiceFields): [string, string][] {
+  return invoiceRows(fields).map(([label, value]): [string, string] =>
+    label.startsWith("Minimum spend")
+      ? ["Min. spend (at venue)", fields.minSpendLabel]
+      : [label.replace(" included", ""), value],
+  );
+}
+
 export function invoiceText(fields: InvoiceFields) {
   return [
     "Carnaval of Screams: your table is confirmed",
@@ -131,13 +140,7 @@ const FONT = "'Angie Sans','Avenir Next',Helvetica,Arial,sans-serif";
  */
 export function invoiceHtml(fields: InvoiceFields) {
   const assets = `${getSiteUrl()}/email`;
-  // Shorter than the plain-text rows: the card has room for one line each.
-  const rows = invoiceRows(fields)
-    .map(([label, value]): [string, string] =>
-      label.startsWith("Minimum spend")
-        ? ["Min. spend (at venue)", fields.minSpendLabel]
-        : [label.replace(" included", ""), value],
-    )
+  const rows = invoiceCardRows(fields)
     .map(
       ([label, value]) =>
         `<tr><td class="mu" style="padding:5px 0;border-bottom:1px solid #1b2340;color:#8d9bc0;font-size:10px;letter-spacing:1px;text-transform:uppercase;vertical-align:middle;width:44%">${escapeHtml(label)}</td>` +
