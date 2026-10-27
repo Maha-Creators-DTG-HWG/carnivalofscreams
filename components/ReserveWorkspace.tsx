@@ -14,7 +14,7 @@ type Props = {
   enabled: boolean;
   snapJsUrl: string;
   clientKey: string;
-  /** "by email and WhatsApp", "by email", … or null when no confirmation is sent. */
+  /** "by email", or null when no confirmation is sent. */
   delivery: string | null;
 };
 

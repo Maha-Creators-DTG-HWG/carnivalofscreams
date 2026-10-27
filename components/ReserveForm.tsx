@@ -36,7 +36,7 @@ type Props = {
   /** Whether takenSeatIds is a real answer yet; tables are never shown free on a failed read. */
   availability: Availability;
   onRetryAvailability: () => void;
-  /** "by email and WhatsApp", "by email", … or null when no confirmation is sent. */
+  /** "by email", or null when no confirmation is sent. */
   delivery: string | null;
   /** Seat selection is lifted so the floor plan can drive it too. */
   seatId: string | null;
