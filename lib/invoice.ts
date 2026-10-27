@@ -1,7 +1,9 @@
 import { insertAuditLogSafe } from "./audit";
 import {
+  claimWhatsAppSend,
   markInvoiceEmailSentSafe,
   markWhatsAppSentSafe,
+  releaseWhatsAppSend,
   type ReservationRecord,
 } from "./reservations";
 import { getSeat } from "./seats";
@@ -220,7 +222,8 @@ export async function sendReservationInvoice(
   if (!fields) return;
 
   const emailNeeded = isEmailConfigured() && !reservation.invoiceEmailSentAt;
-  const whatsappNeeded = isWhatsAppConfigured() && !reservation.whatsappSentAt;
+  const whatsappNeeded =
+    isWhatsAppConfigured() && Boolean(reservation.phone) && !reservation.whatsappSentAt;
   if (!emailNeeded && !whatsappNeeded) return;
 
   if (emailNeeded) {
@@ -249,19 +252,22 @@ export async function sendReservationInvoice(
   }
 
   if (whatsappNeeded) {
+    let claimed = false;
     try {
-      const result = await sendReservationWhatsApp(reservation);
-      if (result.messageId) {
+      claimed = await claimWhatsAppSend(reservation.orderId);
+      if (claimed) {
+        const result = await sendReservationWhatsApp(reservation);
         await markWhatsAppSentSafe(reservation.orderId, result.messageId);
         await insertAuditLogSafe({
           event: "reservation.whatsapp.sent",
           orderId: reservation.orderId,
           method: "POST",
           path: sourcePath,
-          payload: { messageId: result.messageId, status: result.status },
+          payload: { messageId: result.messageId },
         });
       }
     } catch (error) {
+      if (claimed) await releaseWhatsAppSend(reservation.orderId);
       console.error("[invoice] failed to send WhatsApp", error);
       await insertAuditLogSafe({
         event: "reservation.whatsapp.error",

@@ -440,6 +440,31 @@ export async function claimReservationSeat(orderId: string, seatId: string) {
   return mapReservation(data);
 }
 
+/**
+ * Takes the right to send this booking's WhatsApp invoice. The payment webhook and
+ * the confirmation page both try to send it, so the first one to flip
+ * whatsapp_sent_at wins and the guest gets one PDF, not two.
+ */
+export async function claimWhatsAppSend(orderId: string) {
+  const { data, error } = await getDb()
+    .from("reservations")
+    .update({ whatsapp_sent_at: nowIso() })
+    .eq("order_id", orderId)
+    .is("whatsapp_sent_at", null)
+    .select("order_id");
+  if (error) throw error;
+  return data.length > 0;
+}
+
+/** Gives the claim back when sending failed, so the next visit retries. */
+export async function releaseWhatsAppSend(orderId: string) {
+  const { error } = await getDb()
+    .from("reservations")
+    .update({ whatsapp_sent_at: null })
+    .eq("order_id", orderId);
+  if (error) console.error("[reservations] failed to release the WhatsApp claim", error);
+}
+
 export async function markWhatsAppSent(orderId: string, messageId: string) {
   const { error } = await getDb()
     .from("reservations")

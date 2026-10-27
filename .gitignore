@@ -35,9 +35,6 @@ yarn-error.log*
 .env*
 !.env.example
 
-# DOKU Codegen local credentials and fetched API spec
-.claude/doku-codegen.local.md
-.cursor/doku-codegen.local.md
 
 # vercel
 .vercel
