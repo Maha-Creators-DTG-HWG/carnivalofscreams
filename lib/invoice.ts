@@ -1,18 +1,11 @@
 import { insertAuditLogSafe } from "./audit";
 import {
-  claimWhatsAppSend,
   markInvoiceEmailSentSafe,
-  markWhatsAppSentSafe,
-  releaseWhatsAppSend,
   type ReservationRecord,
 } from "./reservations";
 import { getSeat } from "./seats";
 import { getSiteUrl, WHATSAPP_URL } from "./site";
 import { formatIdr, getNight, getTablePackage } from "./tables";
-import {
-  isWhatsAppConfigured,
-  sendReservationWhatsApp,
-} from "./whatsapp";
 
 export type InvoiceFields = {
   day: string;
@@ -67,16 +60,11 @@ export function isEmailConfigured() {
 
 /**
  * How the confirmation actually reaches the guest, for copy that promises it:
- * "by email and WhatsApp", "by email", "by WhatsApp", or null when neither is
- * set up (then the site asks the guest to keep their booking code instead).
+ * "by email", or null when email is not set up (then the site asks the guest to
+ * keep their booking code instead).
  */
 export function deliveryChannels() {
-  const email = isEmailConfigured();
-  const whatsapp = isWhatsAppConfigured();
-  if (email && whatsapp) return "by email and WhatsApp";
-  if (email) return "by email";
-  if (whatsapp) return "by WhatsApp";
-  return null;
+  return isEmailConfigured() ? "by email" : null;
 }
 
 export function invoiceSubject(fields: InvoiceFields) {
@@ -221,63 +209,28 @@ export async function sendReservationInvoice(
   const fields = invoiceFields(reservation);
   if (!fields) return;
 
-  const emailNeeded = isEmailConfigured() && !reservation.invoiceEmailSentAt;
-  const whatsappNeeded =
-    isWhatsAppConfigured() && Boolean(reservation.phone) && !reservation.whatsappSentAt;
-  if (!emailNeeded && !whatsappNeeded) return;
+  if (!isEmailConfigured() || reservation.invoiceEmailSentAt) return;
 
-  if (emailNeeded) {
-    try {
-      await sendInvoiceEmail(reservation, fields);
-      await markInvoiceEmailSentSafe(reservation.orderId);
-      await insertAuditLogSafe({
-        event: "reservation.invoice.email.sent",
-        orderId: reservation.orderId,
-        method: "POST",
-        path: sourcePath,
-        payload: { email: reservation.email },
-      });
-    } catch (error) {
-      console.error("[invoice] failed to send email", error);
-      await insertAuditLogSafe({
-        event: "reservation.invoice.email.error",
-        orderId: reservation.orderId,
-        method: "POST",
-        path: sourcePath,
-        payload: {
-          error: error instanceof Error ? error.message : "unknown",
-        },
-      });
-    }
-  }
-
-  if (whatsappNeeded) {
-    let claimed = false;
-    try {
-      claimed = await claimWhatsAppSend(reservation.orderId);
-      if (claimed) {
-        const result = await sendReservationWhatsApp(reservation);
-        await markWhatsAppSentSafe(reservation.orderId, result.messageId);
-        await insertAuditLogSafe({
-          event: "reservation.whatsapp.sent",
-          orderId: reservation.orderId,
-          method: "POST",
-          path: sourcePath,
-          payload: { messageId: result.messageId },
-        });
-      }
-    } catch (error) {
-      if (claimed) await releaseWhatsAppSend(reservation.orderId);
-      console.error("[invoice] failed to send WhatsApp", error);
-      await insertAuditLogSafe({
-        event: "reservation.whatsapp.error",
-        orderId: reservation.orderId,
-        method: "POST",
-        path: sourcePath,
-        payload: {
-          error: error instanceof Error ? error.message : "unknown",
-        },
-      });
-    }
+  try {
+    await sendInvoiceEmail(reservation, fields);
+    await markInvoiceEmailSentSafe(reservation.orderId);
+    await insertAuditLogSafe({
+      event: "reservation.invoice.email.sent",
+      orderId: reservation.orderId,
+      method: "POST",
+      path: sourcePath,
+      payload: { email: reservation.email },
+    });
+  } catch (error) {
+    console.error("[invoice] failed to send email", error);
+    await insertAuditLogSafe({
+      event: "reservation.invoice.email.error",
+      orderId: reservation.orderId,
+      method: "POST",
+      path: sourcePath,
+      payload: {
+        error: error instanceof Error ? error.message : "unknown",
+      },
+    });
   }
 }
