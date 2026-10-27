@@ -10,11 +10,10 @@ const reservation = {
   phone: "0812 3456 7890",
 } as ReservationRecord;
 
-test("the WhatsApp invoice goes to a 62… number with the PDF address and code", () => {
+test("the WhatsApp invoice goes to a 62… number with the booking code and the PDF link in the text", () => {
   const sent = fonnteMessage(reservation, "https://www.example.test");
   assert.equal(sent.target, "6281234567890");
-  assert.equal(sent.url, "https://www.example.test/invoice/COS-30-ETI-faa1493296.pdf");
-  assert.equal(sent.filename, "Carnaval-of-Screams-COS-30-ETI-faa1493296.pdf");
+  assert.ok(sent.message.endsWith("https://www.example.test/invoice/COS-30-ETI-faa1493296.pdf"));
   assert.ok(sent.message.startsWith("Hi Rina Wulandari,"));
   assert.ok(sent.message.includes("Booking code: COS-30-ETI-faa1493296"));
 });

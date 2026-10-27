@@ -3,10 +3,11 @@ import { getSiteUrl } from "./site";
 import { toWaMeNumber } from "./wa-me";
 
 /**
- * Invoice over WhatsApp through Fonnte (https://docs.fonnte.com/api-send-message/):
- * one POST with the guest's number, a caption and the address of the PDF. Fonnte
- * fetches the PDF from /invoice/<code>.pdf, so that route must stay public.
- * Needs a Fonnte plan that can send files, and the linked phone must stay online.
+ * Invoice over WhatsApp through Fonnte (https://docs.fonnte.com/api-send-message/).
+ * The PDF goes as a link in the text, not as an attachment: attachments (`url`/`file`)
+ * need a paid Fonnte plan, and on the free plan Fonnte silently sends the text only.
+ * The link opens /invoice/<code>.pdf, so that route must stay public.
+ * ponytail: add `url` and `filename` to the body to attach the file once the plan allows it.
  */
 const FONNTE_SEND_URL = "https://api.fonnte.com/send";
 
@@ -33,10 +34,9 @@ export function fonnteMessage(reservation: ReservationRecord, siteUrl = getSiteU
       `Booking code: ${reservation.orderId}`,
       "Show this code at the door. It is also your code for VIP tickets.",
       "",
-      "Your invoice is attached.",
+      "Your invoice (PDF):",
+      `${siteUrl}/invoice/${reservation.orderId}.pdf`,
     ].join("\n"),
-    url: `${siteUrl}/invoice/${reservation.orderId}.pdf`,
-    filename: `Carnaval-of-Screams-${reservation.orderId}.pdf`,
   };
 }
 
