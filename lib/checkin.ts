@@ -21,6 +21,8 @@ export type CheckinBooking = {
   nik: string;
   phone: string;
   day: string;
+  /** "Friday 30 October", for messages. */
+  nightLabel: string;
   area: string;
   table: string;
   seats: number;
@@ -66,6 +68,7 @@ function describe(reservation: ReservationRecord): CheckinBooking | null {
     nik: reservation.nik ?? "",
     phone: reservation.phone,
     day: `${night.day} · ${night.label}`,
+    nightLabel: night.label,
     area: pack.name,
     table: seat.label,
     seats: reservation.partySize,

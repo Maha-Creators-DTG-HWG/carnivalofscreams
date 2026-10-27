@@ -9,9 +9,9 @@ import type { BoardEntry, CheckinView as View, SeatState, Verdict } from "@/lib/
 import { getSeat, SEATS } from "@/lib/seats";
 import { getSiteUrl } from "@/lib/site";
 import { NIGHTS, type NightId } from "@/lib/tables";
-import { invoiceWhatsAppUrl } from "@/lib/wa-me";
+import { invoicePdfUrl, reservationWhatsAppUrl } from "@/lib/wa-me";
 
-import { dateTime, PageHeader, Segmented, Stat } from "../ui";
+import { dateTime, PageHeader, Segmented, Stat, WhatsAppButton } from "../ui";
 import { checkCode, confirmCheckin, undoCheckin, type CheckinResult } from "./actions";
 
 const TONE: Record<Verdict, { label: string; box: string; text: string }> = {
@@ -201,14 +201,17 @@ export default function CheckinView({
             ) : null}
 
             {booking?.phone ? (
-              <a
-                href={invoiceWhatsAppUrl(booking.phone, booking.name, booking.orderId, getSiteUrl())}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-6 inline-block text-[13px] text-white/80 underline decoration-white/30 underline-offset-4 hover:text-white hover:decoration-white"
-              >
-                Send invoice (PDF) on WhatsApp
-              </a>
+              <WhatsAppButton
+                href={reservationWhatsAppUrl({
+                  phone: booking.phone,
+                  name: booking.name,
+                  orderId: booking.orderId,
+                  table: booking.table,
+                  nightLabel: booking.nightLabel,
+                  invoiceUrl: invoicePdfUrl(getSiteUrl(), booking.orderId),
+                })}
+                className="mt-6"
+              />
             ) : null}
 
             <div className="mt-7 flex flex-wrap gap-3">

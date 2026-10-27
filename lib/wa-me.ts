@@ -13,11 +13,27 @@ export function waMeUrl(phone: string, text?: string) {
   return text ? `${url}?text=${encodeURIComponent(text)}` : url;
 }
 
-/** A chat with the guest that carries their invoice PDF link; the team presses send. */
-export function invoiceWhatsAppUrl(phone: string, name: string, orderId: string, siteUrl: string) {
-  const greeting = name.trim() ? `Hi ${name.trim()}` : "Hi";
-  return waMeUrl(
-    phone,
-    `${greeting}, your table at Carnaval of Screams is confirmed. Here is your invoice (PDF):\n${siteUrl}/invoice/${orderId}.pdf\n\nBooking code: ${orderId}\nShow this code at the door.`,
-  );
+/** Where a guest opens their invoice PDF. Only paid tables with a seat have one. */
+export function invoicePdfUrl(siteUrl: string, orderId: string) {
+  return `${siteUrl}/invoice/${orderId}.pdf`;
+}
+
+/**
+ * The admin's "Message" button: a chat with the guest about their table. With an
+ * invoiceUrl it also carries the invoice PDF link, and the team presses send.
+ */
+export function reservationWhatsAppUrl(booking: {
+  phone: string;
+  name: string;
+  orderId: string;
+  table: string;
+  nightLabel: string;
+  invoiceUrl?: string;
+}) {
+  const name = booking.name.trim();
+  const lines = [
+    `${name ? `Hi ${name}` : "Hi"}, this is Carnaval of Screams about your table reservation (${booking.table}, ${booking.nightLabel}). Booking code: ${booking.orderId}.`,
+  ];
+  if (booking.invoiceUrl) lines.push("", `Invoice (PDF): ${booking.invoiceUrl}`);
+  return waMeUrl(booking.phone, lines.join("\n"));
 }

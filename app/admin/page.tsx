@@ -5,7 +5,8 @@ import { listMidtransDigests } from "@/lib/midtrans/log";
 import { isManualBooking, listReservations, type ReservationRecord } from "@/lib/reservations";
 import { getSeat } from "@/lib/seats";
 import { getNight, getTablePackage } from "@/lib/tables";
-import { waMeUrl } from "@/lib/wa-me";
+import { getSiteUrl } from "@/lib/site";
+import { invoicePdfUrl, reservationWhatsAppUrl } from "@/lib/wa-me";
 
 import { paymentTypeLabel } from "./ui";
 import ReservationsView, { type AdminReservation } from "./ReservationsView";
@@ -33,10 +34,20 @@ function describe(reservation: ReservationRecord) {
   };
 }
 
-function whatsappText(reservation: ReservationRecord) {
+function whatsappUrl(reservation: ReservationRecord) {
   const { table, area, nightLong } = describe(reservation);
-  const greeting = reservation.name ? `Hi ${reservation.name}` : "Hi";
-  return `${greeting}, this is Carnaval of Screams about your table reservation (${table ?? area}, ${nightLong}). Booking code: ${reservation.orderId}.`;
+  return reservationWhatsAppUrl({
+    phone: reservation.phone,
+    name: reservation.name,
+    orderId: reservation.orderId,
+    table: table ?? area,
+    nightLabel: nightLong,
+    // Only a paid booking with a table has an invoice to link.
+    invoiceUrl:
+      reservation.status === "paid" && reservation.seatId
+        ? invoicePdfUrl(getSiteUrl(), reservation.orderId)
+        : undefined,
+  });
 }
 
 export default async function AdminPage() {
@@ -65,7 +76,7 @@ export default async function AdminPage() {
       night,
       expiresAt: reservation.expiresAt,
       createdAt: reservation.createdAt,
-      whatsappUrl: reservation.phone ? waMeUrl(reservation.phone, whatsappText(reservation)) : null,
+      whatsappUrl: reservation.phone ? whatsappUrl(reservation) : null,
       test: isTest(reservation),
       midtrans: manual ? null : (digests.get(reservation.orderId) ?? null),
     };

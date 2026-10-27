@@ -10,9 +10,9 @@ import type { GuestDetails } from "@/lib/reservations";
 import { formatIdr, getTablePackage, NIGHTS, TABLE_PACKAGES, type NightId } from "@/lib/tables";
 import { getSiteUrl } from "@/lib/site";
 import { TABLE_POINTS, VENUE_MAP } from "@/lib/venue-areas";
-import { invoiceWhatsAppUrl } from "@/lib/wa-me";
+import { invoicePdfUrl, reservationWhatsAppUrl } from "@/lib/wa-me";
 
-import { PageHeader, Segmented, Stat, STATUS_COLOR, time } from "../ui";
+import { PageHeader, Segmented, Stat, STATUS_COLOR, time, WhatsAppButton } from "../ui";
 import { cancelBooking, deleteBooking, saveGuestDetails, switchTableOff, switchTableOn } from "./actions";
 
 export type TableBooking = {
@@ -326,6 +326,19 @@ function TablePanel({
   const manual = booking?.kind === "manual";
   const errorId = `error-${seat.id}`;
 
+  // The same chat as the Reservations list's "Message" button; paid and by-hand
+  // bookings also carry the invoice PDF link.
+  function messageUrl(guest: TableBooking) {
+    return reservationWhatsAppUrl({
+      phone: guest.phone,
+      name: guest.name,
+      orderId: guest.orderId,
+      table: seat.label,
+      nightLabel: NIGHTS.find((value) => value.id === nightId)?.label ?? nightId,
+      invoiceUrl: guest.kind === "pending" ? undefined : invoicePdfUrl(getSiteUrl(), guest.orderId),
+    });
+  }
+
   function toggle() {
     if (busy.current) return;
     setError(null);
@@ -455,16 +468,7 @@ function TablePanel({
               ? `Still paying. The hold ends${booking.expiresAt ? ` at ${time.format(booking.expiresAt)}` : ""} if payment doesn’t finish, and the table opens again.`
               : "Booked through the website, so it can’t be switched off here."}
           </p>
-          {booking.kind === "paid" && booking.phone ? (
-            <a
-              href={invoiceWhatsAppUrl(booking.phone, booking.name, booking.orderId, getSiteUrl())}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 inline-block text-[13px] text-white underline decoration-white/30 underline-offset-4 hover:decoration-white"
-            >
-              Send invoice (PDF) on WhatsApp
-            </a>
-          ) : null}
+          {booking.phone ? <WhatsAppButton href={messageUrl(booking)} className="mt-4" /> : null}
           {booking.kind === "paid" ? (
             <div className="mt-4 border-t border-white/12 pt-4">
               <button
@@ -529,15 +533,8 @@ function TablePanel({
           ) : null}
 
           {manual && booking?.orderId && booking.phone ? (
-            <div className="border-t border-white/12 px-5 py-3 text-[13px]">
-              <a
-                href={invoiceWhatsAppUrl(booking.phone, booking.name, booking.orderId, getSiteUrl())}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white"
-              >
-                Send invoice (PDF) on WhatsApp
-              </a>
+            <div className="border-t border-white/12 px-5 py-3">
+              <WhatsAppButton href={messageUrl(booking)} />
             </div>
           ) : null}
 
