@@ -77,7 +77,7 @@ export default async function ReservationConfirmedPage({
     event: "reservation.confirmed.view",
     orderId: orderId || null,
     method: "GET",
-    path: "/reserve/confirmed",
+    path: "/reservehide/confirmed",
     ip: meta.ip,
     userAgent: meta.userAgent,
     payload: query,
@@ -89,7 +89,7 @@ export default async function ReservationConfirmedPage({
         kicker="Reservation"
         title="We could not find that order."
         body="Check the link from Midtrans, or start a new table hold."
-        action={{ href: "/reserve", label: "Reserve a table" }}
+        action={{ href: "/reservehide", label: "Reserve a table" }}
       />
     );
   }
@@ -109,7 +109,7 @@ export default async function ReservationConfirmedPage({
           kicker="Reservation"
           title="We could not check that payment."
           body="Try again in a moment. If you already paid, keep your Midtrans receipt."
-          action={{ href: "/reserve", label: "Reserve a table" }}
+          action={{ href: "/reservehide", label: "Reserve a table" }}
         />
       );
     }
@@ -225,7 +225,7 @@ export default async function ReservationConfirmedPage({
   }
 
   if (paid && reservation?.seatId) {
-    await sendReservationInvoice(reservation, "/reserve/confirmed");
+    await sendReservationInvoice(reservation, "/reservehide/confirmed");
     return (
       <StatusShell
         kicker="Reservation held"
@@ -255,7 +255,7 @@ export default async function ReservationConfirmedPage({
         kicker="Hold released"
         title="This table is free again."
         body="The payment window closed, so the hold expired with it. Start a new table hold if you still want a table."
-        action={{ href: "/reserve", label: "Reserve a table" }}
+        action={{ href: "/reservehide", label: "Reserve a table" }}
       >
         {details}
       </StatusShell>
@@ -268,7 +268,7 @@ export default async function ReservationConfirmedPage({
         kicker="Awaiting payment"
         title="Finish paying to keep this table."
         body={`Complete the transfer in Midtrans. This table stays held until the ${PAYMENT_DUE_MINUTES}-minute payment window closes.`}
-        action={{ href: "/reserve", label: "Start again" }}
+        action={{ href: "/reservehide", label: "Start again" }}
       >
         {details}
       </StatusShell>
@@ -281,7 +281,7 @@ export default async function ReservationConfirmedPage({
         kicker="Reservation"
         title="We could not find that order."
         body="If you just paid, wait a few seconds and refresh. Otherwise start a new table hold."
-        action={{ href: "/reserve", label: "Reserve a table" }}
+        action={{ href: "/reservehide", label: "Reserve a table" }}
       />
     );
   }
@@ -291,7 +291,7 @@ export default async function ReservationConfirmedPage({
       kicker="Reservation"
       title="This payment is not confirmed."
       body="If you already paid, wait a moment and refresh. Otherwise try another table hold."
-      action={{ href: "/reserve", label: "Reserve a table" }}
+      action={{ href: "/reservehide", label: "Reserve a table" }}
     >
       {details}
     </StatusShell>

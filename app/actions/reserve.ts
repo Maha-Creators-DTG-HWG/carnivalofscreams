@@ -85,7 +85,7 @@ export async function createReservation(
   await insertAuditLogSafe({
     event: "reservation.create.request",
     method: "POST",
-    path: "/reserve",
+    path: "/reservehide",
     ip: meta.ip,
     userAgent: meta.userAgent,
     payload: raw ?? {},
@@ -101,7 +101,7 @@ export async function createReservation(
         : "reservation.create.error",
       orderId,
       method: "POST",
-      path: "/reserve",
+      path: "/reservehide",
       ip: meta.ip,
       userAgent: meta.userAgent,
       payload: result,
@@ -201,7 +201,7 @@ export async function createReservation(
 
   try {
     const snap = await createSnapTransaction(orderId, reservation, {
-      finishUrl: `${origin}/reserve/confirmed`,
+      finishUrl: `${origin}/reservehide/confirmed`,
       notificationUrl: `${origin}/api/midtrans/notification`,
     });
 
@@ -249,7 +249,7 @@ export async function selectReservationSeat(
     event: "reservation.seat.request",
     orderId,
     method: "POST",
-    path: "/reserve/confirmed",
+    path: "/reservehide/confirmed",
     ip: meta.ip,
     userAgent: meta.userAgent,
     payload: { seatId },
@@ -264,12 +264,12 @@ export async function selectReservationSeat(
     if (!claimed) {
       return { ok: false, error: "That table was just taken. Pick another." };
     }
-    await sendReservationInvoice(claimed, "/reserve/confirmed");
+    await sendReservationInvoice(claimed, "/reservehide/confirmed");
     await insertAuditLogSafe({
       event: "reservation.seat.response",
       orderId,
       method: "POST",
-      path: "/reserve/confirmed",
+      path: "/reservehide/confirmed",
       ip: meta.ip,
       userAgent: meta.userAgent,
       payload: { ok: true, seatId },
@@ -283,7 +283,7 @@ export async function selectReservationSeat(
       event: "reservation.seat.error",
       orderId,
       method: "POST",
-      path: "/reserve/confirmed",
+      path: "/reservehide/confirmed",
       ip: meta.ip,
       userAgent: meta.userAgent,
       payload: { error: detail, seatId },

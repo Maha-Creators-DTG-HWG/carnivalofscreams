@@ -86,7 +86,7 @@ export default function Hero() {
         GET YOUR TICKETS
       </motion.a>
       <motion.a
-        href="/reserve"
+        href="/reservehide"
         variants={item}
         initial="hidden"
         animate="show"

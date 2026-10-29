@@ -3,7 +3,7 @@ import { isFailedStatus, isPaidStatus, isPendingStatus } from "./status";
 
 // Read side of midtrans_callbacks, for the admin panel. Rows are written by
 // /api/midtrans/notification (webhook), /api/midtrans/snap-callback (Snap
-// popup) and /reserve/confirmed (redirect).
+// popup) and /reservehide/confirmed (redirect).
 
 export type MidtransSource = "http_notification" | "snap_js" | "window_redirect";
 

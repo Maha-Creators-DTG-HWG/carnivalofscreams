@@ -78,7 +78,7 @@ export default async function VvipPage({
       </div>
 
       <Link
-        href="/reserve"
+        href="/reservehide"
         className="mt-10 self-center text-sm text-white/65 underline underline-offset-4 transition-colors hover:text-white"
       >
         Back to table reservation

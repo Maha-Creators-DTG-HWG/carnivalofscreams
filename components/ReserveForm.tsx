@@ -280,7 +280,7 @@ export default function ReserveForm({
 
   async function openSnap(hold: Hold) {
     orderIdRef.current = hold.orderId;
-    const confirmedUrl = `/reserve/confirmed?order_id=${encodeURIComponent(hold.orderId)}`;
+    const confirmedUrl = `/reservehide/confirmed?order_id=${encodeURIComponent(hold.orderId)}`;
     setPaying(true);
     try {
       const snap = await waitForSnap();
@@ -409,7 +409,7 @@ export default function ReserveForm({
                   return (
                     <a
                       key={pack.id}
-                      href={`/reserve/${pack.id}?night=${nightId}`}
+                      href={`/reservehide/${pack.id}?night=${nightId}`}
                       className="block w-full border border-white/15 bg-black/30 p-4 text-left transition-colors hover:border-white/50 hover:bg-white/5 sm:p-5"
                     >
                       <span className="flex items-start justify-between gap-4">
